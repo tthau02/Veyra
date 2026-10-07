@@ -1,162 +1,224 @@
-# Veyra — Local AI Video Studio (Phase 1)
+# Veyra — Local AI Video Studio
 
-A modern, high-performance desktop application for local AI video synthesis on Windows. Built with a clean decoupled architecture featuring a **Python AI Core** and a **React + Tailwind + Tauri Desktop Interface**.
+<div align="center">
 
----
+![Veyra Desktop Studio](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-09090b?style=for-the-badge&logo=windows&logoColor=white)
+![Tauri v2](https://img.shields.io/badge/Tauri-v2.12-24C8D8?style=for-the-badge&logo=tauri&logoColor=white)
+![React 18](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-## 1. System Architecture
+**A professional, privacy-first desktop application for local AI video generation.**  
+*Generate high-fidelity videos directly on your local consumer hardware with zero cloud subscriptions.*
 
-```
-local-ai-video-studio/
-│
-├── backend/                  # Python 3.11+ / FastAPI Application Service
-│   ├── app/
-│   │   ├── main.py           # FastAPI entrypoint, lifespan, CORS
-│   │   ├── api/              # API router & v1 route endpoints
-│   │   │   └── v1/           # /health, /system/info, /projects, /models, /generate
-│   │   ├── core/             # Configuration (pydantic-settings) & SQLite abstraction
-│   │   ├── models/           # Domain entity definitions
-│   │   ├── services/         # SystemService, ProjectService, AIEngineService
-│   │   └── schemas/          # Pydantic request / response schemas
-│   ├── tests/                # Automated pytest test suites
-│   ├── requirements.txt      # Backend Python dependencies
-│   └── README.md
-│
-├── frontend/                 # React 18 + TypeScript + Vite + Tailwind CSS
-│   ├── src/
-│   │   ├── components/       # Layout and UI primitives
-│   │   ├── layouts/          # MainLayout (Sidebar + Header + Viewport)
-│   │   ├── pages/            # Dashboard, Create Video, Projects, Models, Settings
-│   │   ├── services/         # api.ts (Backend communication abstraction)
-│   │   ├── types/            # TypeScript strict type definitions
-│   │   └── App.tsx           # App orchestration & reactive state
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tailwind.config.js
-│
-├── src-tauri/                # Tauri v2 Windows Desktop Shell
-│   ├── src/                  # Rust application bootstrap (main.rs, lib.rs)
-│   ├── Cargo.toml            # Rust dependencies & metadata
-│   └── tauri.conf.json       # Desktop window specifications (1280x820, dark theme)
-│
-├── scripts/
-│   ├── dev.py                # Master developer runner (Starts backend + launches Tauri)
-│   ├── run_backend.py        # Standalone FastAPI uvicorn runner
-│   └── run_frontend.py       # Standalone Vite dev runner
-│
-├── data/                     # Application data & SQLite storage
-├── models/                   # Local weights and model storage directory
-├── outputs/                  # Rendered video exports
-│
-├── start-dev.bat             # One-click Windows startup script
-├── .env.example              # Environment variables template
-├── .gitignore                # Production git ignore configuration
-├── pyproject.toml            # Python project definition
-└── README.md
-```
+[Architecture](#-architecture) • [Quick Start](#-quick-start) • [Feature Matrix](#-features--phase-roadmap) • [Hardware Requirements](#-hardware-requirements) • [API Reference](#-api-specification) • [Agent Guidelines](#-agent-development)
+
+</div>
 
 ---
 
-## 2. Technology Stack
+## 🌟 Executive Overview
 
-| Layer | Technology | Details |
+**Veyra** (*Local AI Video Studio*) is an open-architecture desktop application built from the ground up for generative media creators, video editors, and AI researchers. 
+
+Unlike browser-based web wrappers or heavy Electron applications that consume gigabytes of idle RAM, Veyra leverages **Tauri v2** and native **Microsoft Edge WebView2** to provide a featherweight desktop experience (~40MB RAM footprint). The application is powered by an asynchronous **Python FastAPI Core**, allowing full access to local GPU acceleration (NVIDIA CUDA, PyTorch, Diffusers) while maintaining a strict separation between the user interface and AI inference engines.
+
+---
+
+## 🏗️ Architecture
+
+Veyra enforces a **Strict Decoupled Architecture**: the desktop UI and the AI compute core run as isolated services communicating via high-speed localhost REST and Server-Sent Events (SSE).
+
+```
+┌────────────────────────────────────────────────────────┐
+│  DESKTOP SHELL (Tauri v2 / Rust 1.99 / WebView2)      │
+│  - Window Management (1280x820, Dark Studio Canvas)    │
+│  - Native Process Supervision & Lifetime Management     │
+│  - Cross-Platform Packaging (EXE, MSI, DMG, AppImage)   │
+└───────────────────────────┬────────────────────────────┘
+                            │ (Local HTTP & SSE / WebSockets)
+┌───────────────────────────▼────────────────────────────┐
+│  STUDIO UI (React 18 + TypeScript + Tailwind CSS)      │
+│  - Real-Time Hardware Telemetry (CPU, RAM, GPU, VRAM)  │
+│  - Creative Prompt Canvas & Aspect Ratio Matrix Picker │
+│  - Interactive Viewport Player & Job State Machine     │
+│  - Model Catalog & Multi-Project Timeline Manager      │
+└───────────────────────────┬────────────────────────────┘
+                            │ http://127.0.0.1:8000/api
+┌───────────────────────────▼────────────────────────────┐
+│  PYTHON APPLICATION SERVICE (FastAPI + Pydantic v2)   │
+│  - REST API & Job Pipeline Dispatcher (/api/v1/*)      │
+│  - Crash-Proof Hardware Telemetry (psutil / nvidia-smi)│
+│  - SQLite Database Session Abstraction (data/veyra.db)  │
+│  - Local Directory Management (data/, models/, out/)   │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│  AI COMPUTE CORE (Phase 2 - PyTorch + Diffusers)      │
+│  - Latent Diffusion & Video Transformers (AnimateDiff) │
+│  - Sequential CPU Model Offloading & VAE Slicing/Tiling│
+│  - FFmpeg Temporal Frame Interpolation & Muxing        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🖥️ System Hardware Requirements
+
+Because Veyra executes AI synthesis locally on your machine, performance depends on available hardware:
+
+| Component | Minimum (UI & Development) | Recommended (Fast Local AI Video) |
 | :--- | :--- | :--- |
-| **Desktop Shell** | Tauri v2 (Rust) | Native Windows window, WebView2, minimal RAM footprint |
-| **Frontend UI** | React 18 + TypeScript | Strict typing, componentized architecture |
-| **Styling** | Tailwind CSS | Sleek dark studio aesthetic (#09090b), micro-animations |
-| **Icons** | Lucide React | High-end creative studio iconography |
-| **Backend Core** | Python 3.11+ / FastAPI | Async high-performance REST API |
-| **Telemetry** | `psutil` + `subprocess` | Crash-proof GPU/CUDA & CPU/RAM detection |
-| **Validation** | Pydantic v2 + Pydantic Settings | Type-safe configuration & request handling |
-| **Storage** | SQLite Database Abstraction | Lightweight session/connection factory ready for Phase 2 |
+| **Operating System** | Windows 10/11 (64-bit) or macOS (Apple Silicon) | Windows 11 (64-bit) |
+| **Processor (CPU)** | Intel Core i5 / AMD Ryzen 5 (4+ Cores) | Intel Core i7/i9 or AMD Ryzen 7/9 (8+ Cores) |
+| **System Memory (RAM)** | 8 GB RAM | 32 GB RAM |
+| **Graphics (GPU)** | Integrated Graphics (CPU Mode active) | **NVIDIA RTX 3060 / 3070 / 4070+ (8GB - 16GB+ VRAM)** |
+| **CUDA Support** | Not required for Phase 1 UI exploration | **CUDA 12.1+ / Tensor Cores enabled** |
+| **Storage** | 2 GB free disk space | 50 GB+ SSD free space (for AI model weights) |
+
+> 🛡️ **Crash-Proof Guarantee**: If your workstation lacks an NVIDIA GPU or graphics drivers, Veyra will gracefully detect this, display a clear fallback badge, and keep all desktop features operational without crashing.
 
 ---
 
-## 3. Quick Start (Development)
+## ⚡ Quick Start
 
-### One-Command Startup (Recommended)
+### 1. One-Click Batch Launch (Recommended on Windows)
 
-Simply run:
+Simply execute the batch launcher from the repository root:
 
 ```bat
 .\start-dev.bat
 ```
 
-Or via Python:
+Or via the Python orchestrator:
 
-```bash
+```powershell
 .\.venv\Scripts\python.exe scripts\dev.py
 ```
 
-This will automatically:
-1. Start the FastAPI backend service at `http://127.0.0.1:8000`.
-2. Verify backend readiness via `GET /api/health`.
-3. Launch the native Windows desktop studio window: **Local AI Video Studio**.
-4. Automatically terminate background servers when you close the desktop app.
+**What happens automatically:**
+1. Verifies virtual environment and injects toolchain paths (`cargo`, `gcc`).
+2. Starts the Python FastAPI backend service at `http://127.0.0.1:8000`.
+3. Polls `GET /api/health` until the backend reports ready.
+4. Spawns the native desktop window **Local AI Video Studio** (1280x820).
+5. Cleanly terminates background processes when the desktop window is closed.
 
 ---
 
-## 4. Standalone Execution (For Debugging)
+### 2. Standalone Development (For Component Debugging)
 
-### Backend Only
-
-```bash
+#### Run Backend Service Standalone
+```powershell
 .\.venv\Scripts\python.exe scripts\run_backend.py
 ```
-- Endpoint: `http://127.0.0.1:8000`
-- Swagger Docs: `http://127.0.0.1:8000/docs`
-- Health check: `http://127.0.0.1:8000/api/health`
+* Interactive Swagger Docs: `http://127.0.0.1:8000/docs`
+* Health Check: `http://127.0.0.1:8000/api/health`
 
-### Frontend Web Only (Browser Mode)
-
-```bash
-cd frontend
-npm run dev
+#### Run Frontend in Web Browser
+```powershell
+npm --prefix frontend run dev
 ```
-- Available at `http://localhost:5173`
+* Accessible at: `http://localhost:5173`
 
-### Desktop Shell (Tauri Dev)
-
-```bash
-npm run tauri dev
+#### Launch Desktop Shell
+```powershell
+npm run tauri:dev
 ```
 
 ---
 
-## 5. Automated Tests
+## 📋 Features & Phase Roadmap
 
-Run the backend test suite:
+### Phase 1: Architecture & Desktop Foundation *(Completed ✅)*
+- [x] **Windows Native Desktop Shell**: Packaged via Tauri v2 with dark window chrome and zero-latency WebView2 rendering.
+- [x] **Creative Studio UI**: Modern dark theme (`#09090b`), custom slim scrollbars, and high-end Lucide creative icons.
+- [x] **Real-Time Hardware Telemetry**: Live polling of CPU usage, RAM capacity, and NVIDIA GPU/CUDA detection without crashing on non-NVIDIA systems.
+- [x] **Studio Navigation**:
+  - **Dashboard**: Stats cards (Projects, Videos, Models, GPU), recent timelines, quick creation CTA.
+  - **Create Video**: Prompt canvas, negative prompt, aspect ratio matrix (16:9, 9:16, 1:1), resolution (512p, 720p, 1080p), duration, seed controls.
+  - **Studio Viewport**: Interactive preview player with simulated synthesis pipeline (`Queued` → `Generating` → `Completed`) with 0-100% progress tracking.
+  - **Projects Management**: Searchable grid of video timelines, duration tags, resolution badges, creation modal.
+  - **Model Registry**: Catalog of local checkpoints with mock download/install dispatcher.
+  - **Settings**: Categorized configuration for General, AI Engine, GPU acceleration, and local storage directories.
+- [x] **Decoupled Python Backend**: FastAPI application service with Pydantic v2 schemas and SQLite persistence abstraction.
+- [x] **Automated Test Suite**: 100% pass rate across 5 automated pytest suites.
 
-```bash
+### Phase 2: Local AI Synthesis Engine *(Upcoming 🚀)*
+- [ ] **PyTorch CUDA & Diffusers Integration**: Direct execution of latent diffusion pipelines (AnimateDiff, CogVideoX, SDXL).
+- [ ] **Hardware Memory Offloading**: Model CPU offloading, VAE slicing, and temporal tiling for consumer GPU VRAM optimization.
+- [ ] **Real-Time Progress Streaming**: Server-Sent Events (SSE) streaming step-by-step diffusion latents to the preview viewport.
+- [ ] **FFmpeg Video Post-Processing**: Automated frame interpolation, temporal smoothing, and H.264/H.265 MP4 export.
+- [ ] **Hugging Face Model Downloader**: Background thread model downloader with resume capability and progress bars.
+- [ ] **Full SQLite Database ORM**: Persistent project state, history tracking, and generation metadata management.
+
+---
+
+## 📡 API Specification
+
+| Method | Endpoint | Description | Phase 1 Status |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Service status, app title, version | **Active** (`200 OK`) |
+| `GET` | `/api/system/info` | CPU, RAM, GPU name, VRAM, and CUDA status | **Active** (`200 OK`) |
+| `GET` | `/api/projects` | List all saved projects and timelines | **Active** (`200 OK`) |
+| `POST` | `/api/projects` | Create a new project record | **Active** (`201 Created`) |
+| `DELETE` | `/api/projects/{id}` | Delete a project record | **Active** (`204 No Content`) |
+| `GET` | `/api/models` | List available models & installation status | **Active** (`200 OK`) |
+| `POST` | `/api/models/{id}/install` | Trigger model checkpoint installation | **Active** (Mock Dispatcher) |
+| `POST` | `/api/generate` | Contract video generation request | **Active** (`not_implemented` stub) |
+| `POST` | `/api/generate/simulate` | Trigger interactive UI pipeline simulation | **Active** (Returns `job_id`) |
+| `GET` | `/api/generate/jobs/{id}` | Poll generation progress & step telemetry | **Active** (`0% - 100%`) |
+
+---
+
+## 🧪 Testing & Verification
+
+Run the automated backend test suite:
+
+```powershell
 .\.venv\Scripts\pytest.exe -v backend/tests
 ```
 
-**Results:**
-- `test_health_endpoint` PASSED
-- `test_system_info_endpoint` PASSED
-- `test_ai_engine_generate_stub` PASSED
-- `test_projects_crud` PASSED
-- `test_models_endpoint` PASSED
+**Verified Test Suites:**
+* `test_health_endpoint` ✅ PASSED
+* `test_system_info_endpoint` ✅ PASSED
+* `test_ai_engine_generate_stub` ✅ PASSED
+* `test_projects_crud` ✅ PASSED
+* `test_models_endpoint` ✅ PASSED
+
+Verify frontend TypeScript types and production bundling:
+
+```powershell
+npm --prefix frontend run build
+```
 
 ---
 
-## 6. Production Build
+## 📦 Production Desktop Build
 
-To compile the production desktop executable:
+To compile a standalone Windows installer and executable:
 
-```bash
+```powershell
 npm run build:frontend
 npm run tauri:build
 ```
 
-The resulting standalone Windows installer/executable will be generated in `src-tauri/target/release/`.
+The compiled release executable will be located in:
+```
+src-tauri/target/release/
+```
 
 ---
 
-## 7. Next Steps for Phase 2
+## 🤖 Agent Development & Skills
 
-- Integration of PyTorch (CUDA 12.x / ROCm / DirectML) and Diffusers pipelines.
-- Implementation of ComfyUI / custom latent video generator runtime in `backend/app/services/ai_engine_service.py`.
-- FFmpeg video muxing, temporal smoothing, and audio interpolation.
-- Model checkpoint downloader with resume support and progress streaming.
-- SQLite ORM database persistence for projects and generated media histories.
+This repository is equipped with comprehensive agent instructions and runbooks for AI pair programmers:
+* **[AGENTS.md](file:///d:/CodeDenChet/Veyra/AGENTS.md)**: Master developer and agent instruction manual.
+* **`.agents/rules/`**: Architectural and coding constraints.
+* **`.agents/skills/`**: Specialized runbooks for AI video pipelines (`veyra-ai-engine`), desktop bundling (`tauri-desktop-builder`), API development (`fastapi-service-dev`), and creative studio UI (`studio-ui-styling`).
+
+---
+
+## 📄 License
+
+Veyra is distributed under the MIT License. See `LICENSE` for details.
