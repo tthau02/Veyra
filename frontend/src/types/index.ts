@@ -1,0 +1,91 @@
+export type NavPage = "dashboard" | "create" | "projects" | "models" | "settings";
+
+export interface HealthInfo {
+  status: string;
+  app: string;
+  version: string;
+}
+
+export interface GPUInfo {
+  name: string;
+  cuda_available: boolean;
+  device_count: number;
+  driver_version?: string;
+  vram_total_gb?: number;
+  vram_free_gb?: number;
+}
+
+export interface SystemInfo {
+  python_version: string;
+  os_name: string;
+  os_release: string;
+  os_architecture: string;
+  cpu_name: string;
+  cpu_cores_physical: number;
+  cpu_cores_logical: number;
+  cpu_usage_percent: number;
+  ram_total_gb: number;
+  ram_available_gb: number;
+  ram_usage_percent: number;
+  cuda_available: boolean;
+  gpu: GPUInfo;
+  backend_status: string;
+}
+
+export type AspectRatio = "16:9" | "9:16" | "1:1";
+export type Resolution = "512p" | "720p" | "1080p";
+export type Duration = 5 | 10;
+
+export interface Project {
+  id: string;
+  name: string;
+  prompt: string;
+  negative_prompt?: string;
+  model_name: string;
+  aspect_ratio: AspectRatio;
+  resolution: Resolution;
+  duration_seconds: Duration;
+  seed?: number;
+  status: "draft" | "queued" | "generating" | "completed" | "ready";
+  thumbnail_url?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ModelItem {
+  id: string;
+  name: string;
+  type: string;
+  size_gb: number;
+  status: "Installed" | "Not Installed" | "Downloading";
+  description: string;
+  download_progress?: number;
+}
+
+export interface GenerationRequest {
+  prompt: string;
+  negative_prompt?: string;
+  model_name: string;
+  aspect_ratio: AspectRatio;
+  resolution: Resolution;
+  duration_seconds: Duration;
+  seed?: number;
+  simulate_progress?: boolean;
+}
+
+export interface GenerationJobStatus {
+  job_id: string;
+  status: "queued" | "generating" | "completed" | "failed";
+  progress: number;
+  current_step: string;
+  output_url?: string;
+  error_message?: string;
+}
+
+export interface AppSettings {
+  model_dir: string;
+  output_dir: string;
+  cache_dir: string;
+  gpu_acceleration: boolean;
+  auto_cleanup_cache: boolean;
+}
