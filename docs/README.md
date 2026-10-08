@@ -37,3 +37,4 @@ Tài liệu này hệ thống hóa toàn bộ kiến trúc và kế hoạch tri�
 | [03. Lồng Tiếng Đa Ngôn Ngữ](03_MULTILINGUAL_VOICEOVER_AND_AUDIO.md) | Giải pháp Text-to-Speech (TTS) tiếng Việt và đa ngữ, tạo phụ đề tự động (Word Timestamps), xử lý âm thanh đa kênh. |
 | [04. Dựng & Xuất Video Hoàn Chỉnh](04_VIDEO_COMPILATION_AND_TIMELINE.md) | Pipeline FFmpeg tự động ghép clip 3–10 phút, kỹ thuật căn chỉnh nhịp độ video theo lời thoại, hiệu ứng chuyển cảnh. |
 | [05. Lộ Trình Triển Khai (Phased Roadmap)](05_PHASED_IMPLEMENTATION_ROADMAP.md) | Kế hoạch chi tiết từng Phase (Phase 2A đến Phase 5), tiêu chí kiểm thử (Acceptance Criteria), rủi ro & giải pháp. |
+| [06. Huấn Luyện & Nhân Bản Giọng Nói](06_VOICE_CLONING_AND_TRAINING.md) | Kiến trúc nhân bản giọng nói (Zero-Shot) và huấn luyện mô hình giọng nói AI theo yêu cầu (GPT-SoVITS, F5-TTS, RVC). |

@@ -110,6 +110,16 @@ Tài liệu này vạch ra kế hoạch hành động từng bước (từ Phase
 
 ---
 
+### 🎙️ Giai Đoạn 6: Huấn Luyện & Nhân Bản Giọng Nói AI (Advanced Voice Studio)
+> **Mục tiêu**: Cho phép người dùng tự train mô hình AI giọng nói của bất kỳ ai từ file ghi âm và áp dụng đọc lời thoại câu chuyện.
+
+- [ ] **Task 6.1 (Voice Cloning Pipeline)**: Tích hợp F5-TTS / XTTS cho phép sao chép giọng nói tức thì (Zero-Shot) từ đoạn audio mẫu 5–15 giây.
+- [ ] **Task 6.2 (Custom Voice Trainer)**: Tích hợp GPT-SoVITS / RVC v2 tự động tách tạp âm, gắn nhãn bằng Whisper và train LoRA giọng nói trong 10–15 phút.
+- [ ] **Task 6.3 (Voice Library UI)**: Xây dựng tab quản lý thư viện giọng nói đã huấn luyện, nghe thử (preview) và gán trực tiếp cho từng nhân vật trong kịch bản.
+- [ ] **Task 6.4 (Cloud Voice Cloning)**: Tích hợp ElevenLabs VoiceLab API làm tùy chọn nhân bản giọng trên mây cho người dùng không có GPU mạnh.
+
+---
+
 ## ⏱️ Ước Tính Thời Lượng & Độ Phức Tạp
 
 | Giai đoạn | Tính năng chính | Thời gian dự kiến | Mức độ phức tạp |
@@ -119,4 +129,5 @@ Tài liệu này vạch ra kế hoạch hành động từng bước (từ Phase
 | **Phase 3** | Phân cảnh Storyboard & Giữ Nhân Vật | 2 – 3 tuần | Rất cao |
 | **Phase 4** | Giọng đọc tiếng Việt (TTS) & Ducking | 1 tuần | Dễ – Trung bình |
 | **Phase 5** | Ghép Video Hoàn Chỉnh 3–10 phút | 1 – 2 tuần | Trung bình – Khá |
-| **Tổng thể** | **Toàn bộ hệ thống Studio tự động** | **~7 – 10 tuần** | **Cấp độ Doanh nghiệp (Production-ready)** |
+| **Phase 6** | Huấn luyện & Nhân bản Giọng nói AI | 2 – 3 tuần | Khá cao |
+| **Tổng thể** | **Toàn bộ hệ thống Studio tự động** | **~9 – 12 tuần** | **Cấp độ Doanh nghiệp (Production-ready)** |
