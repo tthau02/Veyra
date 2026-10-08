@@ -12,7 +12,7 @@
 **A professional, privacy-first desktop application for local AI video generation.**  
 *Generate high-fidelity videos directly on your local consumer hardware with zero cloud subscriptions.*
 
-[Architecture](#-architecture) • [Quick Start](#-quick-start) • [Feature Matrix](#-features--phase-roadmap) • [Hardware Requirements](#-hardware-requirements) • [API Reference](#-api-specification) • [Agent Guidelines](#-agent-development)
+[Architecture](#-architecture) • [Quick Start](#-quick-start) • [Feature Matrix](#-features--phase-roadmap) • [Hardware Requirements](#-hardware-requirements) • [API Reference](#-api-specification) • [Advanced Roadmap Docs](docs/README.md)
 
 </div>
 
