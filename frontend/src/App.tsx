@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { MainLayout } from "./layouts/MainLayout";
-import { DashboardPage } from "./pages/DashboardPage";
+// import { DashboardPage } from "./pages/DashboardPage";
 import { CreateVideoPage } from "./pages/CreateVideoPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { ModelsPage } from "./pages/ModelsPage";
@@ -9,7 +9,7 @@ import { NavPage, SystemInfo, Project, ModelItem } from "./types";
 import { api } from "./services/api";
 
 export const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<NavPage>("dashboard");
+  const [currentPage, setCurrentPage] = useState<NavPage>("create");
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [backendOnline, setBackendOnline] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -18,9 +18,9 @@ export const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([
     {
       id: "local-proj-1",
-      name: "Cyberpunk Neo-Tokyo Rain",
-      prompt: "Futuristic city with neon rain reflections, cinematic 8k photorealistic video, glowing billboards",
-      negative_prompt: "blurry, low quality, jitter, artifact",
+      name: "Thành phố mưa đêm Cyberpunk",
+      prompt: "Toàn cảnh thành phố tương lai dưới mưa ánh sáng neon phản chiếu, video điện ảnh 8k siêu thực",
+      negative_prompt: "mờ, chất lượng kém, rung giật, lỗi hình ảnh",
       model_name: "Veyra Diffusion v1",
       aspect_ratio: "16:9",
       resolution: "1080p",
@@ -33,9 +33,9 @@ export const App: React.FC = () => {
     },
     {
       id: "local-proj-2",
-      name: "Deep Ocean Bioluminescence",
-      prompt: "Ethereal glowing jellyfish drifting through dark abyss, bioluminescent particles, smooth camera pan",
-      negative_prompt: "cartoon, oversaturated, jerky motion",
+      name: "Sứa phát quang đại dương sâu",
+      prompt: "Đàn sứa biển phát sáng trôi dạt giữa vực thẳm tối tăm, các hạt phát quang sinh học, góc quay lia mượt mà",
+      negative_prompt: "hoạt hình, màu quá chói, chuyển động giật cục",
       model_name: "Veyra Diffusion v1",
       aspect_ratio: "9:16",
       resolution: "720p",
@@ -51,35 +51,35 @@ export const App: React.FC = () => {
   const [models, setModels] = useState<ModelItem[]>([
     {
       id: "model-example",
-      name: "Example Video Model",
-      type: "Text to Video",
+      name: "Mô hình Tham chiếu",
+      type: "Văn bản sang Video",
       size_gb: 0.0,
       status: "Not Installed",
-      description: "Lightweight reference model specification for architectural verification.",
+      description: "Mẫu thông số tham chiếu nhẹ để kiểm tra kết cấu ứng dụng.",
     },
     {
       id: "model-veyra-v1",
       name: "Veyra Diffusion v1",
-      type: "Text to Video",
+      type: "Văn bản sang Video",
       size_gb: 4.2,
       status: "Installed",
-      description: "Default latent diffusion pipeline optimized for local generation.",
+      description: "Quy trình Latent Diffusion mặc định được tối ưu cho phần cứng máy trạm cá nhân.",
     },
     {
       id: "model-animatediff",
       name: "AnimateDiff Lightning",
-      type: "Image/Text to Video",
+      type: "Hình ảnh/Văn bản sang Video",
       size_gb: 2.8,
       status: "Not Installed",
-      description: "High-speed distilled motion adapter for rapid prototype sequences.",
+      description: "Bộ điều hợp chuyển động tốc độ cao tạo mẫu nhanh chuỗi video.",
     },
     {
       id: "model-cogvideox",
       name: "CogVideoX-2B Stub",
-      type: "Text to Video",
+      type: "Văn bản sang Video",
       size_gb: 5.1,
       status: "Not Installed",
-      description: "Next-generation transformer-based video synthesis architecture.",
+      description: "Kiến trúc tổng hợp video dựa trên Transformer thế hệ mới.",
     },
   ]);
 
@@ -181,7 +181,8 @@ export const App: React.FC = () => {
       onRefreshSystem={loadSystemInfo}
       isRefreshing={isRefreshing}
     >
-      {currentPage === "dashboard" && (
+      {/* Tạm thời ẩn DashboardPage */}
+      {/* {currentPage === "dashboard" && (
         <DashboardPage
           onNavigate={setCurrentPage}
           projects={projects}
@@ -189,7 +190,7 @@ export const App: React.FC = () => {
           systemInfo={systemInfo}
           backendOnline={backendOnline}
         />
-      )}
+      )} */}
 
       {currentPage === "create" && (
         <CreateVideoPage models={models} />

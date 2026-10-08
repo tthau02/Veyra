@@ -1,6 +1,7 @@
 import React from "react";
-import { Plus, RefreshCw, Cpu, HardDrive } from "lucide-react";
+import { Plus, RefreshCw, Cpu, HardDrive, Zap } from "lucide-react";
 import { NavPage, SystemInfo } from "../../types";
+import { Button } from "../ui/Button";
 
 interface HeaderProps {
   currentPage: NavPage;
@@ -17,77 +18,99 @@ export const Header: React.FC<HeaderProps> = ({
   onRefreshSystem,
   isRefreshing,
 }) => {
-  const titles: Record<NavPage, { title: string; subtitle: string }> = {
-    dashboard: {
-      title: "Studio Dashboard",
-      subtitle: "Overview of your local AI rendering resources and activity",
-    },
-    create: {
-      title: "Create Video",
-      subtitle: "Configure diffusion parameters, motion dynamics, and prompt canvas",
-    },
-    projects: {
-      title: "Video Projects",
-      subtitle: "Manage all generated timelines, assets, and project configurations",
-    },
-    models: {
-      title: "Model Management",
-      subtitle: "Installed checkpoints, LoRAs, and motion modules",
-    },
-    settings: {
-      title: "Application Settings",
-      subtitle: "Configure hardware acceleration, paths, and local storage limits",
-    },
+  const titles: Record<NavPage, string> = {
+    dashboard: "Tổng quan",
+    create: "Tạo Video",
+    projects: "Dự án Video",
+    models: "Kho Mô hình AI",
+    settings: "Cài đặt Studio",
   };
 
-  const { title, subtitle } = titles[currentPage];
-
   return (
-    <header className="h-16 px-6 bg-[#0b0b0e] border-b border-white/5 flex items-center justify-between select-none">
-      <div>
-        <h1 className="text-base font-semibold text-white tracking-tight">{title}</h1>
-        <p className="text-xs text-zinc-400">{subtitle}</p>
+    <header className="h-14 px-6 bg-[var(--bg-surface)]/95 border-b border-[var(--border-app)] flex items-center justify-between select-none shrink-0 backdrop-blur-md transition-colors duration-200">
+      <div className="flex items-center gap-3">
+        <h1 className="text-sm font-bold text-[var(--text-primary)] tracking-wide">
+          {titles[currentPage]}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* System telemetry snapshot */}
+      <div className="flex items-center gap-3">
+        {/* Hardware telemetry pills */}
         {systemInfo && (
-          <div className="hidden lg:flex items-center gap-3 text-xs text-zinc-400 bg-zinc-900/60 px-3 py-1.5 rounded-lg border border-white/5">
+          <div className="hidden sm:flex items-center gap-3 text-xs text-[var(--text-secondary)] bg-[var(--bg-input)] px-3 py-1.5 rounded-lg border border-[var(--border-app)] font-mono shadow-sm">
+            {/* CPU */}
             <div className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-              <span>CPU:</span>
-              <span className="font-mono text-zinc-200">{systemInfo.cpu_usage_percent}%</span>
+              <Cpu className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-[var(--text-secondary)]">CPU</span>
+              <span className="text-[var(--text-primary)] font-semibold">{systemInfo.cpu_usage_percent}%</span>
+              {systemInfo.cpu_temperature_celsius !== null && systemInfo.cpu_temperature_celsius !== undefined && (
+                <span className="text-indigo-500 dark:text-indigo-300 text-[11px] font-medium">
+                  {systemInfo.cpu_temperature_celsius}°C
+                </span>
+              )}
             </div>
-            <div className="w-[1px] h-3 bg-zinc-800" />
+
+            {/* GPU */}
+            {(systemInfo.cuda_available || systemInfo.gpu?.name !== "Not Detected") && (
+              <>
+                <div className="w-[1px] h-3.5 bg-[var(--border-app)]" />
+                <div
+                  className="flex items-center gap-1.5"
+                  title={`${systemInfo.gpu.name}${systemInfo.gpu.vram_used_gb !== undefined ? ` • VRAM: ${systemInfo.gpu.vram_used_gb} / ${systemInfo.gpu.vram_total_gb} GB` : systemInfo.gpu.vram_total_gb ? ` • VRAM: ${systemInfo.gpu.vram_total_gb} GB` : ""}${systemInfo.gpu.temperature_celsius ? ` • ${systemInfo.gpu.temperature_celsius}°C` : ""}`}
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[var(--text-secondary)]">GPU</span>
+                  <span className="text-[var(--text-primary)] font-semibold">
+                    {systemInfo.gpu.gpu_usage_percent !== undefined && systemInfo.gpu.gpu_usage_percent !== null
+                      ? `${systemInfo.gpu.gpu_usage_percent}%`
+                      : "0%"}
+                  </span>
+                  {systemInfo.gpu.temperature_celsius !== null && systemInfo.gpu.temperature_celsius !== undefined && (
+                    <span className="text-amber-500 dark:text-amber-400 text-[11px] font-medium">
+                      {systemInfo.gpu.temperature_celsius}°C
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className="w-[1px] h-3.5 bg-[var(--border-app)]" />
+
+            {/* RAM */}
             <div className="flex items-center gap-1.5">
-              <HardDrive className="w-3.5 h-3.5 text-purple-400" />
-              <span>RAM:</span>
-              <span className="font-mono text-zinc-200">
-                {systemInfo.ram_usage_percent}% ({systemInfo.ram_available_gb} GB free)
+              <HardDrive className="w-3.5 h-3.5 text-violet-500" />
+              <span className="text-[var(--text-secondary)]">RAM</span>
+              <span className="text-[var(--text-primary)] font-semibold">{systemInfo.ram_usage_percent}%</span>
+              <span className="text-[var(--text-muted)] text-[11px]">
+                ({systemInfo.ram_available_gb}G trống)
               </span>
             </div>
           </div>
         )}
 
-        {/* Refresh telemetry button */}
-        <button
+
+        {/* Refresh telemetry */}
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={onRefreshSystem}
           disabled={isRefreshing}
-          title="Refresh hardware stats"
-          className="p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/5 transition-colors disabled:opacity-50"
+          title="Làm mới thông số phần cứng"
+          className="h-8 w-8 p-0"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-indigo-400" : ""}`} />
-        </button>
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-indigo-500" : ""}`} />
+        </Button>
 
-        {/* Global CTA */}
+        {/* Action Button */}
         {currentPage !== "create" && (
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => onNavigate("create")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Create Video</span>
-          </button>
+            Tạo Video
+          </Button>
         )}
       </div>
     </header>

@@ -6,10 +6,12 @@ import {
   Zap,
   Plus,
   ArrowRight,
-  Clock,
-  Sparkles,
 } from "lucide-react";
 import { NavPage, Project, SystemInfo, ModelItem } from "../types";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
+import { StatusDot } from "../components/ui/StatusDot";
 
 interface DashboardPageProps {
   onNavigate: (page: NavPage) => void;
@@ -30,221 +32,252 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const recentProjects = projects.slice(0, 4);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn">
-      {/* Welcome Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-indigo-950/40 p-8 border border-white/5 shadow-xl">
-        <div className="absolute right-0 top-0 -mt-12 -mr-12 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Veyra Engine • Phase 1 Architecture</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight sm:text-3xl">
-            Welcome to Local AI Video Studio
-          </h2>
-          <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-            Generate high-fidelity videos directly on your local Windows hardware. Complete control,
-            zero cloud subscriptions, and full hardware privacy.
-          </p>
-          <div className="pt-2 flex items-center gap-3">
-            <button
-              onClick={() => onNavigate("create")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create New Video</span>
-            </button>
-            <button
-              onClick={() => onNavigate("models")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 text-xs font-semibold border border-white/5 transition-all"
-            >
-              <Cpu className="w-4 h-4" />
-              <span>Manage Models</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <div className="w-full space-y-6 animate-in fade-in duration-150">
       {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Projects */}
-        <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all">
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-xs font-medium uppercase tracking-wider">Total Projects</span>
-            <FolderKanban className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">{projects.length}</div>
-          <p className="text-[11px] text-zinc-400 mt-1">Saved timelines and drafts</p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Projects */}
+        <Card>
+          <CardContent className="p-4 space-y-1.5">
+            <div className="flex items-center justify-between text-[var(--text-secondary)]">
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                Tổng số Dự án
+              </span>
+              <FolderKanban className="w-4 h-4 text-indigo-500" />
+            </div>
+            <div className="text-2xl font-bold text-[var(--text-primary)] font-mono">
+              {projects.length}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Card 2: Generated Videos */}
-        <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all">
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-xs font-medium uppercase tracking-wider">Generated Videos</span>
-            <Film className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {projects.filter((p) => p.status === "completed").length}
-          </div>
-          <p className="text-[11px] text-zinc-400 mt-1">Rendered video outputs</p>
-        </div>
+        {/* Generated Videos */}
+        <Card>
+          <CardContent className="p-4 space-y-1.5">
+            <div className="flex items-center justify-between text-[var(--text-secondary)]">
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                Video đã tạo
+              </span>
+              <Film className="w-4 h-4 text-violet-500" />
+            </div>
+            <div className="text-2xl font-bold text-[var(--text-primary)] font-mono">
+              {projects.filter((p) => p.status === "completed").length}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Card 3: Installed Models */}
-        <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all">
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-xs font-medium uppercase tracking-wider">Installed Models</span>
-            <Cpu className="w-4 h-4 text-pink-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">{installedModelsCount}</div>
-          <p className="text-[11px] text-zinc-400 mt-1">Available for local synthesis</p>
-        </div>
+        {/* Models */}
+        <Card>
+          <CardContent className="p-4 space-y-1.5">
+            <div className="flex items-center justify-between text-[var(--text-secondary)]">
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                Mô hình đã cài
+              </span>
+              <Cpu className="w-4 h-4 text-pink-500" />
+            </div>
+            <div className="text-2xl font-bold text-[var(--text-primary)] font-mono">
+              {installedModelsCount}
+              <span className="text-xs text-[var(--text-secondary)] font-normal ml-1.5">
+                / {models.length}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Card 4: GPU Status */}
-        <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all">
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-xs font-medium uppercase tracking-wider">GPU Status</span>
-            <Zap className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-sm font-semibold text-white truncate" title={systemInfo?.gpu.name}>
-            {systemInfo?.gpu.name || (backendOnline ? "Not Detected" : "Offline")}
-          </div>
-          <div className="mt-1 flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                systemInfo?.cuda_available ? "bg-emerald-400" : "bg-zinc-600"
-              }`}
-            />
-            <span className="text-[11px] text-zinc-400 font-mono">
-              {systemInfo?.cuda_available ? "CUDA Accelerated" : "CPU Fallback"}
-            </span>
-          </div>
-        </div>
+        {/* GPU Engine */}
+        <Card>
+          <CardContent className="p-4 space-y-1.5">
+            <div className="flex items-center justify-between text-[var(--text-secondary)]">
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                GPU Xử lý
+              </span>
+              <Zap className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="flex items-center gap-2 pt-0.5">
+              <StatusDot
+                status={systemInfo?.cuda_available ? "online" : "idle"}
+                size="sm"
+              />
+              <span className="text-xs font-mono font-medium text-[var(--text-primary)] truncate">
+                {systemInfo?.cuda_available
+                  ? systemInfo.gpu.name.replace(/NVIDIA\s+/i, "")
+                  : "Chế độ CPU"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Projects Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-white">Recent Projects</h3>
-            <p className="text-xs text-zinc-400">Continue where you left off</p>
+      {/* Main Grid: Recent Projects & System Inspector */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Recent Projects (Col 8) */}
+        <div className="lg:col-span-8 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+              Dự án gần đây
+            </h2>
+            {projects.length > 0 && (
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={() => onNavigate("projects")}
+                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+              >
+                Xem tất cả
+              </Button>
+            )}
           </div>
-          {projects.length > 0 && (
-            <button
-              onClick={() => onNavigate("projects")}
-              className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-            >
-              <span>View all projects</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+
+          {recentProjects.length === 0 ? (
+            <Card className="p-10 text-center border-dashed border-zinc-800">
+              <Film className="w-8 h-8 text-zinc-600 mx-auto mb-2.5" />
+              <p className="text-sm text-zinc-300 font-medium">Chưa có dự án nào</p>
+              <div className="mt-4">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => onNavigate("create")}
+                  leftIcon={<Plus className="w-4 h-4" />}
+                >
+                  Tạo Video Mới
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {recentProjects.map((p) => (
+                <Card
+                  key={p.id}
+                  interactive
+                  onClick={() => onNavigate("projects")}
+                  className="group flex flex-col justify-between"
+                >
+                  <CardContent className="p-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-indigo-500 dark:group-hover:text-indigo-300 transition-colors line-clamp-1">
+                        {p.name}
+                      </h3>
+                      <Badge
+                        variant={
+                          p.status === "completed"
+                            ? "success"
+                            : p.status === "ready"
+                            ? "info"
+                            : "default"
+                        }
+                        size="xs"
+                        withDot
+                      >
+                        {p.status === "completed"
+                          ? "Hoàn thành"
+                          : p.status === "ready"
+                          ? "Sẵn sàng"
+                          : p.status === "generating"
+                          ? "Đang tạo"
+                          : "Bản nháp"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
+                      {p.prompt}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1 text-xs text-[var(--text-muted)] font-mono">
+                      <span>{p.aspect_ratio}</span>
+                      <span>•</span>
+                      <span>{p.resolution}</span>
+                      <span>•</span>
+                      <span>{p.duration_seconds}s</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
 
-        {recentProjects.length === 0 ? (
-          <div className="p-12 text-center rounded-xl bg-zinc-900/30 border border-dashed border-white/10">
-            <Film className="w-8 h-8 text-zinc-400 mx-auto mb-3" />
-            <p className="text-sm font-medium text-zinc-300">No projects yet</p>
-            <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
-              You haven't generated any video projects yet. Create your first video project to get started.
-            </p>
-            <button
-              onClick={() => onNavigate("create")}
-              className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-all"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Create New Video</span>
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recentProjects.map((project) => (
-              <div
-                key={project.id}
-                onClick={() => onNavigate("projects")}
-                className="group p-4 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/15 cursor-pointer transition-all flex gap-4"
-              >
-                {/* Thumbnail placeholder */}
-                <div className="w-28 h-20 rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/5 shrink-0 flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform">
-                  <Film className="w-6 h-6 text-zinc-600 group-hover:text-indigo-400 transition-colors" />
-                  <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/80 text-[9px] font-mono text-zinc-400">
-                    {project.duration_seconds}s
+        {/* System & Engine Inspector (Col 4) */}
+        <div className="lg:col-span-4 space-y-3.5">
+          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+            Trạng thái Máy chủ
+          </h2>
+
+          <Card>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-xs text-[var(--text-primary)] font-semibold">
+                Thông số Phần cứng
+              </CardTitle>
+              <StatusDot status={backendOnline ? "online" : "offline"} size="sm" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-3 text-xs font-mono">
+              <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                <span>Tải CPU</span>
+                <span className="text-[var(--text-primary)] font-semibold">
+                  {systemInfo ? `${systemInfo.cpu_usage_percent}%` : "—"}
+                  {systemInfo?.cpu_temperature_celsius ? ` (${systemInfo.cpu_temperature_celsius}°C)` : ""}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                <span>Sử dụng RAM</span>
+                <span className="text-[var(--text-primary)] font-semibold">
+                  {systemInfo
+                    ? `${systemInfo.ram_usage_percent}% (${systemInfo.ram_available_gb}G trống)`
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                <span>Thiết bị CUDA</span>
+                <span className="text-[var(--text-primary)] truncate max-w-[160px] text-right font-medium">
+                  {systemInfo?.cuda_available ? "Hỗ trợ" : "Không phát hiện"}
+                </span>
+              </div>
+              {systemInfo?.gpu.vram_total_gb && (
+                <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                  <span>VRAM Đang dùng</span>
+                  <span className="text-[var(--text-primary)] font-medium">
+                    {systemInfo.gpu.vram_used_gb !== undefined && systemInfo.gpu.vram_used_gb !== null
+                      ? `${systemInfo.gpu.vram_used_gb.toFixed(1)} / ${systemInfo.gpu.vram_total_gb.toFixed(1)} GB`
+                      : `${Math.max(0, Math.round((systemInfo.gpu.vram_total_gb - (systemInfo.gpu.vram_free_gb ?? 0)) * 10) / 10).toFixed(1)} / ${systemInfo.gpu.vram_total_gb.toFixed(1)} GB`}
                   </span>
                 </div>
-
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition-colors">
-                        {project.name}
-                      </h4>
-                      <span
-                        className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
-                          project.status === "completed"
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : "bg-indigo-500/20 text-indigo-300"
-                        }`}
-                      >
-                        {project.status}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-zinc-400 line-clamp-1 mt-1">
-                      {project.prompt}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-[10px] text-zinc-400 font-mono">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </span>
-                    <span>•</span>
-                    <span>{project.aspect_ratio}</span>
-                    <span>•</span>
-                    <span>{project.resolution}</span>
-                  </div>
+              )}
+              {systemInfo?.gpu.temperature_celsius && (
+                <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                  <span>Nhiệt độ GPU</span>
+                  <span className="text-amber-500 dark:text-amber-400 font-medium">
+                    {systemInfo.gpu.temperature_celsius}°C
+                  </span>
                 </div>
+              )}
+              <div className="flex items-center justify-between text-[var(--text-secondary)] pt-2.5 border-t border-[var(--border-subtle)]">
+                <span>Hệ điều hành</span>
+                <span className="text-[var(--text-primary)]">
+                  {systemInfo ? `${systemInfo.os_name} ${systemInfo.os_architecture}` : "—"}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* Host Architecture & Environment Card */}
-      {systemInfo && (
-        <div className="p-5 rounded-xl bg-zinc-900/40 border border-white/5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-              Host Environment Telemetry
-            </h3>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-              Verified
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div>
-              <span className="text-zinc-400 text-[11px] block">OS & Platform</span>
-              <span className="font-medium text-white">
-                {systemInfo.os_name} {systemInfo.os_release} ({systemInfo.os_architecture})
-              </span>
-            </div>
-            <div>
-              <span className="text-zinc-400 text-[11px] block">Python Runtime</span>
-              <span className="font-mono text-white">v{systemInfo.python_version}</span>
-            </div>
-            <div>
-              <span className="text-zinc-400 text-[11px] block">CPU Configuration</span>
-              <span className="font-medium text-white">
-                {systemInfo.cpu_cores_physical} cores / {systemInfo.cpu_cores_logical} threads
-              </span>
-            </div>
-            <div>
-              <span className="text-zinc-400 text-[11px] block">RAM Installed</span>
-              <span className="font-medium text-white">
-                {systemInfo.ram_total_gb} GB ({systemInfo.ram_available_gb} GB available)
-              </span>
-            </div>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onNavigate("create")}
+              leftIcon={<Plus className="w-4 h-4" />}
+              className="w-full text-xs"
+            >
+              Tạo Video
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onNavigate("models")}
+              leftIcon={<Cpu className="w-4 h-4 text-zinc-400" />}
+              className="w-full text-xs"
+            >
+              Kho Mô hình
+            </Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

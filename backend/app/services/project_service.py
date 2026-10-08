@@ -12,9 +12,9 @@ class ProjectService:
         self._projects: dict[str, ProjectResponse] = {
             "proj-demo-1": ProjectResponse(
                 id="proj-demo-1",
-                name="Cyberpunk Neo-Tokyo Rain",
-                prompt="Futuristic city with neon rain reflections, cinematic 8k photorealistic video, glowing billboards",
-                negative_prompt="blurry, low quality, jitter, artifact",
+                name="Thành phố mưa đêm Cyberpunk",
+                prompt="Toàn cảnh thành phố tương lai dưới mưa ánh sáng neon phản chiếu, video điện ảnh 8k siêu thực",
+                negative_prompt="mờ, chất lượng kém, rung giật, lỗi hình ảnh",
                 model_name="Veyra-Diffusion-v1",
                 aspect_ratio="16:9",
                 resolution="1080p",
@@ -27,9 +27,9 @@ class ProjectService:
             ),
             "proj-demo-2": ProjectResponse(
                 id="proj-demo-2",
-                name="Deep Ocean Bioluminescence",
-                prompt="Ethereal glowing jellyfish drifting through dark abyss, bioluminescent particles, smooth camera pan",
-                negative_prompt="cartoon, oversaturated, jerky motion",
+                name="Sứa phát quang đại dương sâu",
+                prompt="Đàn sứa biển phát sáng trôi dạt giữa vực thẳm tối tăm, các hạt phát quang sinh học, góc quay lia mượt mà",
+                negative_prompt="hoạt hình, màu quá chói, chuyển động giật cục",
                 model_name="Veyra-Diffusion-v1",
                 aspect_ratio="9:16",
                 resolution="720p",

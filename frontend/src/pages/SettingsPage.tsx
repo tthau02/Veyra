@@ -1,19 +1,38 @@
 import React, { useState } from "react";
 import {
-  Folder,
-  Zap,
   Save,
   Check,
   RotateCcw,
+  Sliders,
+  Cpu,
+  Zap,
+  HardDrive,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { AppSettings, SystemInfo } from "../types";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Button,
+  Input,
+  Select,
+  SegmentedControl,
+  Switch,
+} from "../components/ui";
+import { useTheme } from "../context/ThemeContext";
 
 interface SettingsPageProps {
   systemInfo: SystemInfo | null;
 }
 
+type SettingsTab = "general" | "ai" | "gpu" | "storage";
+
 export const SettingsPage: React.FC<SettingsPageProps> = ({ systemInfo }) => {
-  const [activeTab, setActiveTab] = useState<"general" | "ai" | "gpu" | "storage">("general");
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
 
   const [settings, setSettings] = useState<AppSettings>({
     model_dir: "./models",
@@ -42,106 +61,117 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ systemInfo }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
-      <div>
-        <h2 className="text-xl font-bold text-white tracking-tight">Studio Settings</h2>
-        <p className="text-xs text-zinc-400">Configure engine paths, acceleration, and disk management</p>
-      </div>
+    <div className="w-full max-w-4xl space-y-6 animate-in fade-in duration-150">
+      {/* Header with Title and Compact Tab Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+        <div>
+          <h2 className="text-base font-bold text-[var(--text-primary)] tracking-wide">Cài đặt Hệ thống</h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">Tùy chỉnh thông số máy chủ, GPU và thư mục lưu trữ</p>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-white/5 space-x-6 text-xs font-medium">
-        {[
-          { id: "general", label: "General" },
-          { id: "ai", label: "AI Engine" },
-          { id: "gpu", label: "GPU Acceleration" },
-          { id: "storage", label: "Storage & Paths" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as typeof activeTab)}
-            className={`pb-3 transition-colors relative ${
-              activeTab === tab.id
-                ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-indigo-500"
-                : "text-zinc-400 hover:text-zinc-200"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {/* Compact Segmented Tab Control */}
+        <SegmentedControl<SettingsTab>
+          value={activeTab}
+          onChange={setActiveTab}
+          fullWidth={false}
+          size="sm"
+          options={[
+            { value: "general", label: "Chung", icon: <Sliders className="w-3.5 h-3.5" /> },
+            { value: "ai", label: "Bộ xử lý AI", icon: <Cpu className="w-3.5 h-3.5" /> },
+            { value: "gpu", label: "Tăng tốc GPU", icon: <Zap className="w-3.5 h-3.5" /> },
+            { value: "storage", label: "Lưu trữ", icon: <HardDrive className="w-3.5 h-3.5" /> },
+          ]}
+        />
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Tab 1: General */}
         {activeTab === "general" && (
-          <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 space-y-4">
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-              Studio Environment
-            </h3>
-            <div className="space-y-4 text-xs">
-              <div className="flex items-center justify-between py-2 border-b border-white/5">
+          <Card>
+            <CardHeader className="py-3 px-5">
+              <CardTitle className="text-sm">Giao diện Studio</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4 divide-y divide-[var(--border-subtle)]">
+              <div className="flex items-center justify-between pb-3 text-sm">
                 <div>
-                  <span className="font-medium text-white block">Theme Mode</span>
-                  <span className="text-zinc-400 text-[11px]">Desktop studio theme is permanently dark</span>
+                  <span className="font-medium text-[var(--text-primary)] block">Chế độ hiển thị</span>
+                  <span className="text-[var(--text-secondary)] text-xs">
+                    {theme === "dark"
+                      ? "Giao diện tối Studio chuyên nghiệp (Mặc định)"
+                      : "Giao diện sáng rõ nét, phong cách hiện đại"}
+                  </span>
                 </div>
-                <span className="px-2.5 py-1 rounded bg-zinc-800 text-zinc-300 font-mono text-[11px]">
-                  Dark Studio (Fixed)
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-medium text-[var(--text-secondary)]">
+                    {theme === "dark" ? "Dark Studio" : "Light Studio"}
+                  </span>
+                  <Switch
+                    checked={theme === "dark"}
+                    onChange={(checked) => setTheme(checked ? "dark" : "light")}
+                    icon={
+                      theme === "dark" ? (
+                        <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                      ) : (
+                        <Sun className="w-3.5 h-3.5 text-amber-500" />
+                      )
+                    }
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between pt-3 text-sm">
                 <div>
-                  <span className="font-medium text-white block">Telemetry Logging</span>
-                  <span className="text-zinc-400 text-[11px]">Output runtime logs to local console</span>
+                  <span className="font-medium text-[var(--text-primary)] block">Giám sát tài nguyên phần cứng</span>
+                  <span className="text-[var(--text-secondary)] text-xs">Đo thời gian thực tải CPU, RAM & GPU</span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold">
-                  Enabled
+                <span className="text-xs font-mono text-emerald-500 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                  Đang hoạt động
                 </span>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Tab 2: AI */}
+        {/* Tab 2: AI Engine */}
         {activeTab === "ai" && (
-          <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 space-y-4">
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-              Diffusion Engine Parameters
-            </h3>
-            <div className="space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="font-medium text-zinc-200">Default Model Checkpoint</label>
-                <select className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-xs text-zinc-100">
-                  <option>Veyra Diffusion v1 (Default)</option>
-                  <option>AnimateDiff Lightning</option>
-                  <option>CogVideoX-2B Stub</option>
-                </select>
-              </div>
+          <Card>
+            <CardHeader className="py-3 px-5">
+              <CardTitle className="text-sm">Quy trình xử lý AI</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              <Select label="Mô hình AI mặc định">
+                <option>Veyra Diffusion v1</option>
+                <option>AnimateDiff Lightning</option>
+                <option>CogVideoX-2B Stub</option>
+              </Select>
 
-              <div className="flex items-center justify-between py-2 border-t border-white/5">
+              <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-sm">
                 <div>
-                  <span className="font-medium text-white block">Attention Slicing</span>
-                  <span className="text-zinc-400 text-[11px]">Reduces VRAM usage at slight speed cost</span>
+                  <span className="font-medium text-[var(--text-primary)] block">Phân lát chú ý (Attention Slicing)</span>
+                  <span className="text-[var(--text-secondary)] text-xs">Tiết kiệm dung lượng VRAM cho các dòng GPU tầm trung</span>
                 </div>
-                <input type="checkbox" defaultChecked className="rounded bg-zinc-800 accent-indigo-500" />
+                <input
+                  type="checkbox"
+                  defaultChecked
+                  className="rounded w-4 h-4 bg-[var(--bg-input)] accent-indigo-600 cursor-pointer"
+                />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Tab 3: GPU */}
+        {/* Tab 3: GPU Acceleration */}
         {activeTab === "gpu" && (
-          <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 space-y-4">
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" />
-              <span>Hardware Acceleration</span>
-            </h3>
-
-            <div className="space-y-4 text-xs">
-              <div className="flex items-center justify-between py-2 border-b border-white/5">
+          <Card>
+            <CardHeader className="py-3 px-5">
+              <CardTitle className="text-sm">Tăng tốc phần cứng</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)] text-sm">
                 <div>
-                  <span className="font-medium text-white block">Enable GPU Acceleration</span>
-                  <span className="text-zinc-400 text-[11px]">
-                    Leverage NVIDIA CUDA tensor cores when available
+                  <span className="font-medium text-[var(--text-primary)] block">Bật tăng tốc NVIDIA CUDA</span>
+                  <span className="text-[var(--text-secondary)] text-xs">
+                    Tận dụng Tensor Cores để tăng tốc độ xuất video AI
                   </span>
                 </div>
                 <input
@@ -150,70 +180,73 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ systemInfo }) => {
                   onChange={(e) =>
                     setSettings({ ...settings, gpu_acceleration: e.target.checked })
                   }
-                  className="rounded w-4 h-4 bg-zinc-800 accent-indigo-500"
+                  className="rounded w-4 h-4 bg-[var(--bg-input)] accent-indigo-600 cursor-pointer"
                 />
               </div>
 
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 space-y-1.5">
-                <span className="text-[10px] text-zinc-400 font-mono uppercase block">Active Device</span>
-                <p className="text-xs font-medium text-white">
-                  {systemInfo?.gpu.name || "No dedicated GPU detected (CPU mode active)"}
-                </p>
+              <div className="p-4 rounded-lg bg-[var(--bg-input)] border border-[var(--border-app)] space-y-2.5 text-xs font-mono">
+                <div className="flex justify-between text-[var(--text-secondary)]">
+                  <span>Thiết bị phát hiện</span>
+                  <span className="text-[var(--text-primary)] font-semibold">
+                    {systemInfo?.gpu.name || "Chế độ CPU"}
+                  </span>
+                </div>
+                {systemInfo?.gpu.vram_total_gb && (
+                  <div className="flex justify-between text-[var(--text-secondary)]">
+                    <span>Bộ nhớ VRAM</span>
+                    <span className="text-emerald-500 dark:text-emerald-400 font-semibold">
+                      {systemInfo.gpu.vram_used_gb !== undefined && systemInfo.gpu.vram_used_gb !== null
+                        ? `${systemInfo.gpu.vram_used_gb.toFixed(1)} / ${systemInfo.gpu.vram_total_gb.toFixed(1)} GB`
+                        : `${systemInfo.gpu.vram_total_gb} GB`}
+                    </span>
+                  </div>
+                )}
+                {systemInfo?.gpu.temperature_celsius && (
+                  <div className="flex justify-between text-[var(--text-secondary)]">
+                    <span>Nhiệt độ GPU</span>
+                    <span className="text-amber-500 dark:text-amber-400 font-semibold">{systemInfo.gpu.temperature_celsius}°C</span>
+                  </div>
+                )}
                 {systemInfo?.gpu.driver_version && (
-                  <p className="text-[11px] text-zinc-400 font-mono">
-                    NVIDIA Driver: {systemInfo.gpu.driver_version} • VRAM: {systemInfo.gpu.vram_total_gb} GB
-                  </p>
+                  <div className="flex justify-between text-[var(--text-secondary)]">
+                    <span>Phiên bản Driver</span>
+                    <span className="text-[var(--text-primary)]">{systemInfo.gpu.driver_version}</span>
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Tab 4: Storage */}
         {activeTab === "storage" && (
-          <div className="p-5 rounded-xl bg-zinc-900/60 border border-white/5 space-y-4">
-            <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
-              <Folder className="w-4 h-4 text-indigo-400" />
-              <span>Directories & Cache Storage</span>
-            </h3>
+          <Card>
+            <CardHeader className="py-3 px-5">
+              <CardTitle className="text-sm">Thư mục & Lưu trữ</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              <Input
+                label="Thư mục lưu trọng số Model"
+                value={settings.model_dir}
+                onChange={(e) => setSettings({ ...settings, model_dir: e.target.value })}
+              />
 
-            <div className="space-y-3.5 text-xs">
-              <div className="space-y-1.5">
-                <label className="font-medium text-zinc-300">Model Directory</label>
-                <input
-                  type="text"
-                  value={settings.model_dir}
-                  onChange={(e) => setSettings({ ...settings, model_dir: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-xs text-white font-mono"
-                />
-              </div>
+              <Input
+                label="Thư mục xuất Video"
+                value={settings.output_dir}
+                onChange={(e) => setSettings({ ...settings, output_dir: e.target.value })}
+              />
 
-              <div className="space-y-1.5">
-                <label className="font-medium text-zinc-300">Output Directory</label>
-                <input
-                  type="text"
-                  value={settings.output_dir}
-                  onChange={(e) => setSettings({ ...settings, output_dir: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-xs text-white font-mono"
-                />
-              </div>
+              <Input
+                label="Thư mục bộ nhớ đệm (Cache)"
+                value={settings.cache_dir}
+                onChange={(e) => setSettings({ ...settings, cache_dir: e.target.value })}
+              />
 
-              <div className="space-y-1.5">
-                <label className="font-medium text-zinc-300">Cache Directory</label>
-                <input
-                  type="text"
-                  value={settings.cache_dir}
-                  onChange={(e) => setSettings({ ...settings, cache_dir: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-xs text-white font-mono"
-                />
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-t border-white/5">
+              <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] text-sm">
                 <div>
-                  <span className="font-medium text-white block">Auto Cleanup Cache</span>
-                  <span className="text-zinc-400 text-[11px]">
-                    Automatically purge temporary latent frames after export
-                  </span>
+                  <span className="font-medium text-[var(--text-primary)] block">Tự động dọn dẹp Cache</span>
+                  <span className="text-[var(--text-secondary)] text-xs">Xóa các khung hình trung gian sau khi tạo video xong</span>
                 </div>
                 <input
                   type="checkbox"
@@ -221,31 +254,39 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ systemInfo }) => {
                   onChange={(e) =>
                     setSettings({ ...settings, auto_cleanup_cache: e.target.checked })
                   }
-                  className="rounded w-4 h-4 bg-zinc-800 accent-indigo-500"
+                  className="rounded w-4 h-4 bg-[var(--bg-input)] accent-indigo-600 cursor-pointer"
                 />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-2">
-          <button
+        {/* Prominent, well-proportioned Footer Actions */}
+        <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)]">
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleReset}
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="h-10 px-4 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            leftIcon={<RotateCcw className="w-4 h-4" />}
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Defaults</span>
-          </button>
+            Khôi phục mặc định
+          </Button>
 
-          <button
+          <Button
             type="submit"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all active:scale-95"
+            variant="primary"
+            className="h-10 px-7 text-sm font-semibold tracking-wide shadow-lg shadow-indigo-600/25"
+            leftIcon={
+              isSaved ? (
+                <Check className="w-4 h-4 text-emerald-200" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )
+            }
           >
-            {isSaved ? <Check className="w-4 h-4 text-emerald-300" /> : <Save className="w-4 h-4" />}
-            <span>{isSaved ? "Saved Successfully" : "Save Changes"}</span>
-          </button>
+            {isSaved ? "Đã lưu thành công" : "Lưu cài đặt"}
+          </Button>
         </div>
       </form>
     </div>

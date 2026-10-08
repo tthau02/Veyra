@@ -3,12 +3,20 @@ import {
   Plus,
   Film,
   Search,
-  Clock,
   Trash2,
   Calendar,
-  X,
+  ExternalLink,
 } from "lucide-react";
 import { Project, NavPage } from "../types";
+import {
+  Button,
+  Input,
+  Textarea,
+  Modal,
+  Card,
+  CardContent,
+  Badge,
+} from "../components/ui";
 
 interface ProjectsPageProps {
   projects: Project[];
@@ -50,197 +58,194 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({
     }
   };
 
+  const getStatusLabel = (st: string) => {
+    switch (st) {
+      case "completed":
+        return "Hoàn thành";
+      case "ready":
+        return "Sẵn sàng";
+      case "generating":
+        return "Đang tạo";
+      case "queued":
+        return "Đang chờ";
+      default:
+        return "Bản nháp";
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn">
+    <div className="w-full space-y-5 animate-in fade-in duration-150">
       {/* Top action header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
-          <p className="text-xs text-zinc-400">All local video generation projects and drafts</p>
+      <div className="flex items-center justify-between gap-4">
+        {/* Search bar */}
+        <div className="w-72">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm kiếm dự án..."
+            leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+          />
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Search bar */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search projects..."
-              className="pl-8 pr-3.5 py-1.5 rounded-lg bg-zinc-900 border border-white/10 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 w-52 transition-all"
-            />
-          </div>
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Project</span>
-          </button>
-        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setIsModalOpen(true)}
+          leftIcon={<Plus className="w-4 h-4" />}
+        >
+          Dự án Mới
+        </Button>
       </div>
 
       {/* Projects Grid */}
       {filteredProjects.length === 0 ? (
-        <div className="p-16 text-center rounded-2xl bg-zinc-900/30 border border-dashed border-white/10">
-          <Film className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-zinc-300">
-            {searchQuery ? "No matching projects found" : "No projects yet"}
-          </p>
-          <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
-            {searchQuery
-              ? `No projects matched "${searchQuery}". Try a different keyword.`
-              : "Get started by creating your first AI video timeline."}
+        <Card className="p-12 text-center border-dashed border-[var(--border-app)]">
+          <Film className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3" />
+          <p className="text-sm text-[var(--text-secondary)] font-medium">
+            {searchQuery ? "Không tìm thấy dự án phù hợp" : "Chưa có dự án nào"}
           </p>
           {!searchQuery && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition-all"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Create Project</span>
-            </button>
+            <div className="mt-4">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsModalOpen(true)}
+                leftIcon={<Plus className="w-4 h-4" />}
+              >
+                Tạo Dự án Mới
+              </Button>
+            </div>
           )}
-        </div>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProjects.map((project) => (
-            <div
+            <Card
               key={project.id}
-              className="group rounded-xl bg-zinc-900/70 border border-white/5 hover:border-white/15 overflow-hidden transition-all flex flex-col justify-between"
+              className="group flex flex-col justify-between overflow-hidden"
             >
-              {/* Project Preview Banner */}
-              <div className="h-36 bg-gradient-to-br from-zinc-800 to-zinc-950 relative flex items-center justify-center border-b border-white/5 group-hover:bg-zinc-800/80 transition-colors">
-                <Film className="w-8 h-8 text-zinc-600 group-hover:text-indigo-400 transition-colors" />
+              {/* Aspect Ratio Preview Canvas */}
+              <div className="h-36 bg-zinc-100 dark:bg-[#0a0b12] relative flex items-center justify-center border-b border-[var(--border-subtle)]">
+                <Film className="w-8 h-8 text-zinc-400 dark:text-zinc-700 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors" />
 
-                {/* Aspect Ratio Badge */}
-                <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-[10px] font-mono text-zinc-300 border border-white/10">
-                  {project.aspect_ratio}
-                </span>
+                <div className="absolute top-2.5 left-2.5">
+                  <Badge variant="outline" size="xs">
+                    {project.aspect_ratio}
+                  </Badge>
+                </div>
 
-                {/* Status Badge */}
-                <span
-                  className={`absolute top-2.5 right-2.5 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                    project.status === "completed"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                      : "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                  }`}
-                >
-                  {project.status}
-                </span>
+                <div className="absolute top-2.5 right-2.5">
+                  <Badge
+                    variant={
+                      project.status === "completed"
+                        ? "success"
+                        : project.status === "ready"
+                        ? "info"
+                        : "default"
+                    }
+                    size="xs"
+                    withDot
+                  >
+                    {getStatusLabel(project.status)}
+                  </Badge>
+                </div>
 
-                {/* Duration */}
-                <span className="absolute bottom-2.5 right-2.5 px-1.5 py-0.5 rounded bg-black/80 text-[10px] font-mono text-zinc-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
+                <div className="absolute bottom-2.5 right-2.5 text-xs font-mono text-white bg-black/75 px-2 py-0.5 rounded backdrop-blur-sm border border-black/30 shadow-sm">
                   {project.duration_seconds}s
-                </span>
+                </div>
               </div>
 
               {/* Project Details */}
-              <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+              <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-white group-hover:text-indigo-300 transition-colors truncate">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-indigo-500 dark:group-hover:text-indigo-300 transition-colors truncate">
                     {project.name}
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2 leading-relaxed">
                     {project.prompt}
                   </p>
                 </div>
 
-                <div className="space-y-3 pt-2 border-t border-white/5">
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
-                    <span className="flex items-center gap-1 font-mono">
-                      <Calendar className="w-3 h-3 text-zinc-400" />
-                      {new Date(project.created_at).toLocaleDateString()}
+                <div className="space-y-3 pt-2.5 border-t border-[var(--border-subtle)]">
+                  <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {new Date(project.created_at).toLocaleDateString("vi-VN")}
                     </span>
-                    <span className="font-mono text-zinc-400 bg-white/5 px-1.5 py-0.5 rounded">
-                      {project.resolution}
-                    </span>
+                    <span className="font-semibold text-[var(--text-primary)]">{project.resolution}</span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    <button
+                  <div className="flex items-center justify-between gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => onNavigate("create")}
-                      className="flex-1 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-colors"
+                      leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                      className="flex-1 text-xs"
                     >
-                      Open in Studio
-                    </button>
-                    <button
+                      Mở trong Studio
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
                       onClick={() => onDeleteProject(project.id)}
-                      className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Delete project"
+                      title="Xóa dự án"
+                      className="px-2.5"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
       {/* New Project Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#121216] border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4 animate-scaleUp">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-white">Create New Project</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">Project Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  placeholder="e.g. Neon Samurai Cyberpunk"
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">Initial Prompt</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={newProjectPrompt}
-                  onChange={(e) => setNewProjectPrompt(e.target.value)}
-                  placeholder="Describe your scene concept..."
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition-all disabled:opacity-50"
-                >
-                  {isSubmitting ? "Creating..." : "Create Project"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Tạo Dự án Mới"
+        maxWidth="md"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleCreate}
+              isLoading={isSubmitting}
+            >
+              Tạo Dự án
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          <Input
+            label="Tên Dự án"
+            required
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            placeholder="VD: Thành phố tương lai mưa đêm Cyberpunk"
+          />
+          <Textarea
+            label="Mô tả Video (Prompt)"
+            rows={4}
+            required
+            value={newProjectPrompt}
+            onChange={(e) => setNewProjectPrompt(e.target.value)}
+            placeholder="Mô tả ý tưởng khung cảnh, ánh sáng, góc máy..."
+          />
+        </form>
+      </Modal>
     </div>
   );
 };

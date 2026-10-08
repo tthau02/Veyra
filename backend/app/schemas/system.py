@@ -14,7 +14,11 @@ class GPUInfo(BaseModel):
     device_count: int = 0
     driver_version: Optional[str] = None
     vram_total_gb: Optional[float] = None
+    vram_used_gb: Optional[float] = None
     vram_free_gb: Optional[float] = None
+    gpu_usage_percent: Optional[float] = None
+    vram_used_percent: Optional[float] = None
+    temperature_celsius: Optional[float] = None
 
 
 class SystemInfoResponse(BaseModel):
@@ -26,6 +30,7 @@ class SystemInfoResponse(BaseModel):
     cpu_cores_physical: int
     cpu_cores_logical: int
     cpu_usage_percent: float
+    cpu_temperature_celsius: Optional[float] = None
     ram_total_gb: float
     ram_available_gb: float
     ram_usage_percent: float

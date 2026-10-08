@@ -2,16 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root, html.dark {
   color-scheme: dark;
+  --bg-app: #0b0c13;
+  --bg-surface: #0e0f18;
+  --bg-card: #141524;
+  --bg-card-hover: #181a2c;
+  --bg-input: #0e0f18;
+  --border-app: rgba(39, 39, 42, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --text-primary: #f3f4f8;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+}
+
+html.light {
+  color-scheme: light;
+  --bg-app: #f4f5f8;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f9fafb;
+  --bg-input: #f8f9fc;
+  --border-app: rgba(228, 228, 231, 0.9);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
 }
 
 body {
   margin: 0;
   padding: 0;
-  user-select: none;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #09090b;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Allow text selection in inputs and textareas */
+input, textarea {
+  user-select: text;
+}
+
+::selection {
+  background-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
 }
 
 /* Custom Sleek Scrollbar */
@@ -25,35 +63,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: rgba(150, 150, 160, 0.2);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
-}
-
-/* Studio custom utilities */
-.studio-glass {
-  background: rgba(18, 18, 21, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.studio-border {
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.studio-card {
-  background-color: #121215;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.studio-card-interactive {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.studio-card-interactive:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  transform: translateY(-1px);
+  background: rgba(99, 102, 241, 0.4);
 }

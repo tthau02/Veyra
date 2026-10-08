@@ -12,7 +12,11 @@ export interface GPUInfo {
   device_count: number;
   driver_version?: string;
   vram_total_gb?: number;
+  vram_used_gb?: number;
   vram_free_gb?: number;
+  gpu_usage_percent?: number | null;
+  vram_used_percent?: number | null;
+  temperature_celsius?: number | null;
 }
 
 export interface SystemInfo {
@@ -24,6 +28,7 @@ export interface SystemInfo {
   cpu_cores_physical: number;
   cpu_cores_logical: number;
   cpu_usage_percent: number;
+  cpu_temperature_celsius?: number | null;
   ram_total_gb: number;
   ram_available_gb: number;
   ram_usage_percent: number;
