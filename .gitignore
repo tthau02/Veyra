@@ -48,14 +48,10 @@ data/*.db
 data/*.sqlite
 data/*.sqlite3
 data/cache/
-models/*.safetensors
-models/*.ckpt
-models/*.bin
-models/*.pt
-outputs/*.mp4
-outputs/*.png
-outputs/*.jpg
-outputs/*.webp
+models/*
+!models/.gitkeep
+outputs/*
+!outputs/.gitkeep
 
 # IDE & OS
 .vscode/

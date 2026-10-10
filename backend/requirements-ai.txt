@@ -1,0 +1,10 @@
+# Install CUDA torch first (see backend/README.md), then this optional runtime.
+diffusers==0.35.1
+transformers==4.56.2
+accelerate==1.10.1
+safetensors==0.6.2
+huggingface_hub==0.36.2
+imageio-ffmpeg==0.6.0
+Pillow>=10.0,<12
+sentencepiece==0.2.1
+scipy>=1.11,<2

@@ -31,6 +31,17 @@ class DatabaseManager:
         """Create baseline database schema if tables do not exist."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS model_downloads (
+                    model_id TEXT PRIMARY KEY,
+                    manifest TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'idle',
+                    downloaded_bytes INTEGER NOT NULL DEFAULT 0,
+                    total_bytes INTEGER NOT NULL DEFAULT 0,
+                    error_message TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS projects (
@@ -109,6 +120,9 @@ class DatabaseManager:
                 );
                 """
             )
+            columns = {row["name"] for row in conn.execute("PRAGMA table_info(generation_jobs)")}
+            if "metadata" not in columns:
+                conn.execute("ALTER TABLE generation_jobs ADD COLUMN metadata TEXT")
 
 
 db_manager = DatabaseManager()

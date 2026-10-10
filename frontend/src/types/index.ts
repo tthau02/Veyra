@@ -65,6 +65,30 @@ export interface ModelItem {
   status: "Installed" | "Not Installed" | "Downloading";
   description: string;
   download_progress?: number;
+  supported: boolean;
+  download_status: ModelDownloadState;
+  downloaded_bytes: number;
+  total_bytes: number;
+  error_message?: string | null;
+  files_complete: boolean;
+}
+
+export type ModelDownloadState = "idle" | "queued" | "downloading" | "verifying" | "completed" | "interrupted" | "failed" | "paused" | "waiting_network";
+
+export interface ModelDownloadStatus {
+  model_id: string;
+  status: ModelDownloadState;
+  progress: number;
+  downloaded_bytes: number;
+  total_bytes: number;
+  error_message?: string | null;
+}
+
+export interface ModelPreparation {
+  model_id: string;
+  total_bytes: number;
+  remaining_bytes: number;
+  required_bytes: number;
 }
 
 export interface GenerationRequest {
@@ -76,15 +100,20 @@ export interface GenerationRequest {
   duration_seconds: Duration;
   seed?: number;
   simulate_progress?: boolean;
+  engine_mode?: "local" | "cloud";
 }
 
 export interface GenerationJobStatus {
   job_id: string;
-  status: "queued" | "generating" | "completed" | "failed";
+  status: "queued" | "generating" | "decoding" | "muxing" | "completed" | "failed";
   progress: number;
   current_step: string;
-  output_url?: string;
-  error_message?: string;
+  output_url?: string | null;
+  error_message?: string | null;
+  width?: number | null;
+  height?: number | null;
+  frame_count?: number | null;
+  seed?: number | null;
 }
 
 export interface AppSettings {

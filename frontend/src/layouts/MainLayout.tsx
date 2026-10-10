@@ -65,7 +65,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         )}
 
         {/* Dynamic Page Content - Full Width */}
-        <main className="flex-1 min-h-0 overflow-y-auto p-6 bg-transparent w-full">
+        <main className="flex-1 min-h-0 overflow-y-auto p-6 bg-transparent w-full custom-scrollbar">
           {children}
         </main>
       </div>

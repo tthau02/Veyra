@@ -5,6 +5,8 @@ import {
   ModelItem,
   GenerationRequest,
   GenerationJobStatus,
+  ModelDownloadStatus,
+  ModelPreparation,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
@@ -92,28 +94,53 @@ class ApiService {
   }
 
   public async getModels(): Promise<ModelItem[]> {
-    try {
       const res = await fetch(`${this.baseUrl}/api/models`, {
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(30000),
       });
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error("Không thể lấy danh sách mô hình.");
       const data = await res.json();
       return data.models || [];
-    } catch {
-      return [];
+  }
+
+  private async modelAction<T>(modelId: string, action: string): Promise<T> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/models/${modelId}/${action}`, {
+        method: "POST",
+        signal: AbortSignal.timeout(120000),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(typeof body.detail === "string" ? body.detail : "Không thể tải mô hình.");
+      return body as T;
+    } catch (error) {
+      if (error instanceof Error && error.name === "Error") throw error;
+      throw new Error("Mất kết nối. Kiểm tra lại trạng thái tải.");
     }
   }
 
-  public async installModel(modelId: string): Promise<ModelItem | null> {
-    try {
-      const res = await fetch(`${this.baseUrl}/api/models/${modelId}/install`, {
-        method: "POST",
-      });
-      if (!res.ok) return null;
-      return (await res.json()) as ModelItem;
-    } catch {
-      return null;
-    }
+  public async prepareModel(modelId: string): Promise<ModelPreparation> {
+    return this.modelAction<ModelPreparation>(modelId, "prepare");
+  }
+
+  public async deleteModel(modelId: string): Promise<ModelItem> {
+    const res = await fetch(`${this.baseUrl}/api/models/${encodeURIComponent(modelId)}`, {
+      method: "DELETE",
+      signal: AbortSignal.timeout(120000),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(typeof body.detail === "string" ? body.detail : "Không thể xóa mô hình.");
+    return body as ModelItem;
+  }
+
+  public async installModel(modelId: string): Promise<ModelDownloadStatus> {
+    return this.modelAction<ModelDownloadStatus>(modelId, "install");
+  }
+
+  public async pauseModel(modelId: string): Promise<ModelDownloadStatus> {
+    return this.modelAction<ModelDownloadStatus>(modelId, "pause");
+  }
+
+  public async resumeModel(modelId: string): Promise<ModelDownloadStatus> {
+    return this.modelAction<ModelDownloadStatus>(modelId, "resume");
   }
 
   public async generateVideo(req: GenerationRequest): Promise<{
@@ -126,27 +153,16 @@ class ApiService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
+        signal: AbortSignal.timeout(120000),
       });
-      return await res.json();
+      const data = await res.json();
+      if (!res.ok) return { status: "error", message: typeof data.detail === "string" ? data.detail : "Không thể tạo video." };
+      return data;
     } catch {
       return {
         status: "error",
-        message: "Failed to connect to backend engine.",
+        message: "Không thể kết nối máy chủ.",
       };
-    }
-  }
-
-  public async startSimulateJob(req: GenerationRequest): Promise<GenerationJobStatus | null> {
-    try {
-      const res = await fetch(`${this.baseUrl}/api/generate/simulate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req),
-      });
-      if (!res.ok) return null;
-      return (await res.json()) as GenerationJobStatus;
-    } catch {
-      return null;
     }
   }
 
@@ -155,6 +171,7 @@ class ApiService {
       const res = await fetch(`${this.baseUrl}/api/generate/jobs/${jobId}`, {
         signal: AbortSignal.timeout(3000),
       });
+      if (res.status === 404) return { job_id: jobId, status: "failed", progress: 0, current_step: "Không tìm thấy tác vụ." };
       if (!res.ok) return null;
       return (await res.json()) as GenerationJobStatus;
     } catch {
@@ -224,7 +241,7 @@ class ApiService {
 
   public async getModelDownloadStatus(
     modelId: string
-  ): Promise<{ status: string; progress: number; message?: string } | null> {
+  ): Promise<ModelDownloadStatus | null> {
     try {
       const res = await fetch(`${this.baseUrl}/api/models/${modelId}/download-status`, {
         signal: AbortSignal.timeout(3000),

@@ -48,40 +48,7 @@ export const App: React.FC = () => {
     },
   ]);
 
-  const [models, setModels] = useState<ModelItem[]>([
-    {
-      id: "model-animatediff",
-      name: "AnimateDiff Lightning",
-      type: "Hình ảnh/Văn bản sang Video",
-      size_gb: 2.8,
-      status: "Not Installed",
-      description: "Tạo video tốc độ cao (4-step distilled), tốc độ 15-30 giây/clip. Rất mát và tối ưu cho RTX 3070 8GB.",
-    },
-    {
-      id: "model-cogvideox",
-      name: "CogVideoX-2B",
-      type: "Văn bản sang Video",
-      size_gb: 5.1,
-      status: "Not Installed",
-      description: "Video Transformer thế hệ mới từ Zhipu AI, độ nét 720p, chuyển động vật lý chân thực.",
-    },
-    {
-      id: "model-ltx",
-      name: "LTX-Video (2B)",
-      type: "Văn bản / Ảnh sang Video",
-      size_gb: 4.5,
-      status: "Not Installed",
-      description: "Kiến trúc suy luận video thời gian thực siêu nhanh của Lightricks, chuyển động camera tự nhiên.",
-    },
-    {
-      id: "model-svd",
-      name: "Stable Video Diffusion XT",
-      type: "Hình ảnh sang Video",
-      size_gb: 4.5,
-      status: "Not Installed",
-      description: "Biến ảnh tĩnh thành chuỗi video 25 khung hình chất lượng điện ảnh với góc quay mượt mà.",
-    },
-  ]);
+  const [models, setModels] = useState<ModelItem[]>([]);
 
   // Fetch telemetry and backend status
   const loadSystemInfo = useCallback(async () => {
@@ -157,21 +124,6 @@ export const App: React.FC = () => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Model installation handler
-  const handleInstallModel = async (modelId: string) => {
-    const installed = await api.installModel(modelId);
-    if (installed) {
-      setModels((prev) =>
-        prev.map((m) => (m.id === modelId ? { ...m, status: "Installed" } : m))
-      );
-    } else {
-      // Local state fallback
-      setModels((prev) =>
-        prev.map((m) => (m.id === modelId ? { ...m, status: "Installed" } : m))
-      );
-    }
-  };
-
   return (
     <MainLayout
       currentPage={currentPage}
@@ -206,7 +158,7 @@ export const App: React.FC = () => {
       )}
 
       {currentPage === "models" && (
-        <ModelsPage models={models} onInstallModel={handleInstallModel} />
+        <ModelsPage models={models} onModelsChanged={setModels} />
       )}
 
       {currentPage === "settings" && (

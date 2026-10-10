@@ -30,7 +30,7 @@ async def test_system_info_endpoint():
 
 
 @pytest.mark.anyio
-async def test_ai_engine_generate_dispatch():
+async def test_ai_engine_generate_requires_installed_model():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         payload = {
             "prompt": "Cyberpunk city with rain",
@@ -40,10 +40,8 @@ async def test_ai_engine_generate_dispatch():
             "duration_seconds": 5,
         }
         response = await client.post("/api/generate", json=payload)
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "started"
-        assert data["job_id"] is not None
+        assert response.status_code == 409
+        assert "Tải đầy đủ" in response.json()["detail"]
 
 
 @pytest.mark.anyio

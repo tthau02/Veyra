@@ -1,3 +1,0 @@
-Model: AnimateDiff Lightning
-HF Repo: ByteDance/AnimateDiff-Lightning
-Size: 2.8 GB

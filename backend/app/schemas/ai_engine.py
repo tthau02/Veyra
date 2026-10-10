@@ -1,5 +1,8 @@
 from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+ModelDownloadState = Literal["idle", "queued", "downloading", "verifying", "completed", "interrupted", "failed", "paused", "waiting_network"]
+GenerationState = Literal["queued", "generating", "decoding", "muxing", "completed", "failed"]
 
 
 class VideoGenerationRequest(BaseModel):
@@ -9,8 +12,16 @@ class VideoGenerationRequest(BaseModel):
     aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
     resolution: Literal["512p", "720p", "1080p"] = "720p"
     duration_seconds: Literal[5, 10] = 5
-    seed: Optional[int] = None
+    seed: Optional[int] = Field(default=None, ge=0, le=4294967295)
     simulate_progress: bool = False
+    engine_mode: Literal["local", "cloud"] = "local"
+
+    @field_validator("prompt")
+    @classmethod
+    def strip_prompt(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Nhập mô tả video.")
+        return value.strip()
 
 
 class VideoGenerationResponse(BaseModel):
@@ -21,11 +32,15 @@ class VideoGenerationResponse(BaseModel):
 
 class JobStatusResponse(BaseModel):
     job_id: str
-    status: Literal["queued", "generating", "completed", "failed"]
+    status: GenerationState
     progress: int = Field(ge=0, le=100)
     current_step: str
     output_url: Optional[str] = None
     error_message: Optional[str] = None
+    width: int | None = None
+    height: int | None = None
+    frame_count: int | None = None
+    seed: int | None = None
 
 
 class ModelInfo(BaseModel):
@@ -36,6 +51,28 @@ class ModelInfo(BaseModel):
     status: Literal["Installed", "Not Installed", "Downloading"]
     description: str
     download_progress: Optional[int] = None
+    supported: bool = True
+    download_status: ModelDownloadState = "idle"
+    downloaded_bytes: int = 0
+    total_bytes: int = 0
+    error_message: str | None = None
+    files_complete: bool = False
+
+
+class ModelDownloadStatus(BaseModel):
+    model_id: str
+    status: ModelDownloadState = "idle"
+    progress: int = Field(default=0, ge=0, le=100)
+    downloaded_bytes: int = 0
+    total_bytes: int = 0
+    error_message: str | None = None
+
+
+class ModelPreparation(BaseModel):
+    model_id: str
+    total_bytes: int
+    remaining_bytes: int
+    required_bytes: int
 
 
 class ModelListResponse(BaseModel):
