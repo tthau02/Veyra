@@ -50,36 +50,36 @@ export const App: React.FC = () => {
 
   const [models, setModels] = useState<ModelItem[]>([
     {
-      id: "model-example",
-      name: "Mô hình Tham chiếu",
-      type: "Văn bản sang Video",
-      size_gb: 0.0,
-      status: "Not Installed",
-      description: "Mẫu thông số tham chiếu nhẹ để kiểm tra kết cấu ứng dụng.",
-    },
-    {
-      id: "model-veyra-v1",
-      name: "Veyra Diffusion v1",
-      type: "Văn bản sang Video",
-      size_gb: 4.2,
-      status: "Installed",
-      description: "Quy trình Latent Diffusion mặc định được tối ưu cho phần cứng máy trạm cá nhân.",
-    },
-    {
       id: "model-animatediff",
       name: "AnimateDiff Lightning",
       type: "Hình ảnh/Văn bản sang Video",
       size_gb: 2.8,
       status: "Not Installed",
-      description: "Bộ điều hợp chuyển động tốc độ cao tạo mẫu nhanh chuỗi video.",
+      description: "Tạo video tốc độ cao (4-step distilled), tốc độ 15-30 giây/clip. Rất mát và tối ưu cho RTX 3070 8GB.",
     },
     {
       id: "model-cogvideox",
-      name: "CogVideoX-2B Stub",
+      name: "CogVideoX-2B",
       type: "Văn bản sang Video",
       size_gb: 5.1,
       status: "Not Installed",
-      description: "Kiến trúc tổng hợp video dựa trên Transformer thế hệ mới.",
+      description: "Video Transformer thế hệ mới từ Zhipu AI, độ nét 720p, chuyển động vật lý chân thực.",
+    },
+    {
+      id: "model-ltx",
+      name: "LTX-Video (2B)",
+      type: "Văn bản / Ảnh sang Video",
+      size_gb: 4.5,
+      status: "Not Installed",
+      description: "Kiến trúc suy luận video thời gian thực siêu nhanh của Lightricks, chuyển động camera tự nhiên.",
+    },
+    {
+      id: "model-svd",
+      name: "Stable Video Diffusion XT",
+      type: "Hình ảnh sang Video",
+      size_gb: 4.5,
+      status: "Not Installed",
+      description: "Biến ảnh tĩnh thành chuỗi video 25 khung hình chất lượng điện ảnh với góc quay mượt mà.",
     },
   ]);
 

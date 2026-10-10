@@ -161,6 +161,80 @@ class ApiService {
       return null;
     }
   }
+
+  public async getProviders(): Promise<import("../types").CloudProvider[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/providers`, {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.providers || [];
+    } catch {
+      return [];
+    }
+  }
+
+  public async saveProviderKey(
+    providerId: string,
+    apiKey: string,
+    isActive: boolean = true
+  ): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/providers/${providerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey, is_active: isActive }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  public async removeProviderKey(providerId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/providers/${providerId}`, {
+        method: "DELETE",
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  public async testProviderKey(
+    providerId: string,
+    apiKey: string
+  ): Promise<{ valid: boolean; message: string; credits_remaining?: number }> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/providers/${providerId}/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey }),
+      });
+      if (!res.ok) {
+        return { valid: false, message: "Lỗi kết nối máy chủ backend." };
+      }
+      return await res.json();
+    } catch {
+      return { valid: false, message: "Không thể kết nối đến backend." };
+    }
+  }
+
+  public async getModelDownloadStatus(
+    modelId: string
+  ): Promise<{ status: string; progress: number; message?: string } | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/models/${modelId}/download-status`, {
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const api = new ApiService();

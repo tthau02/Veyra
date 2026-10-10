@@ -9,8 +9,10 @@ import {
   Monitor,
   Smartphone,
   Square,
+  Cpu,
+  Cloud,
 } from "lucide-react";
-import { AspectRatio, Resolution, Duration, ModelItem, GenerationJobStatus } from "../types";
+import { AspectRatio, Resolution, Duration, ModelItem } from "../types";
 import { api } from "../services/api";
 import { cn } from "../utils/cn";
 import {
@@ -19,7 +21,6 @@ import {
   Textarea,
   Select,
   SegmentedControl,
-  Badge,
   Card,
   CardHeader,
   CardTitle,
@@ -31,6 +32,9 @@ interface CreateVideoPageProps {
 }
 
 export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
+  // Engine Mode: local vs cloud
+  const [engineMode, setEngineMode] = useState<"local" | "cloud">("local");
+
   // Generation parameters state
   const [prompt, setPrompt] = useState<string>(
     "Một cảnh quay điện ảnh góc trên cao toàn cảnh thành phố cyberpunk tương lai dưới cơn mưa rào, ánh đèn neon phản chiếu trên mặt đường ướt, ánh sáng thể tích volumetric, siêu chi tiết 8k"
@@ -39,8 +43,10 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
     "mờ, biến dạng, rung giật, chất lượng kém, lỗi hình ảnh, hoạt hình xấu, chuyển động giật cục"
   );
   const [selectedModel, setSelectedModel] = useState<string>(
-    models.find((m) => m.status === "Installed")?.name || "Veyra Diffusion v1"
+    models.find((m) => m.status === "Installed")?.name || models[0]?.name || "AnimateDiff Lightning"
   );
+  const [selectedCloudProvider, setSelectedCloudProvider] = useState<string>("kling");
+
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [resolution, setResolution] = useState<Resolution>("720p");
   const [duration, setDuration] = useState<Duration>(5);
@@ -116,7 +122,7 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
 
     setJobStatus("queued");
     setProgress(5);
-    setCurrentStep("Đang gửi yêu cầu tới máy chủ AI...");
+    setCurrentStep("Đang chuẩn bị tạo video...");
 
     const actualSeed = isRandomSeed ? Math.floor(Math.random() * 999999) : seed ?? 42;
 
@@ -124,7 +130,7 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
       await api.generateVideo({
         prompt,
         negative_prompt: negativePrompt,
-        model_name: selectedModel,
+        model_name: engineMode === "local" ? selectedModel : selectedCloudProvider,
         aspect_ratio: aspectRatio,
         resolution,
         duration_seconds: duration,
@@ -134,7 +140,7 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
       const simJob = await api.startSimulateJob({
         prompt,
         negative_prompt: negativePrompt,
-        model_name: selectedModel,
+        model_name: engineMode === "local" ? selectedModel : selectedCloudProvider,
         aspect_ratio: aspectRatio,
         resolution,
         duration_seconds: duration,
@@ -143,19 +149,17 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
 
       if (simJob && simJob.job_id) {
         setActiveJobId(simJob.job_id);
-        setJobStatus(simJob.status);
-        setProgress(simJob.progress);
-        setCurrentStep(simJob.current_step);
 
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = window.setInterval(async () => {
-          const statusUpdate: GenerationJobStatus | null = await api.getJobStatus(simJob.job_id);
-          if (statusUpdate) {
-            setJobStatus(statusUpdate.status);
-            setProgress(statusUpdate.progress);
-            setCurrentStep(statusUpdate.current_step);
 
-            if (statusUpdate.status === "completed" || statusUpdate.status === "failed") {
+        pollIntervalRef.current = window.setInterval(async () => {
+          const statusRes = await api.getJobStatus(simJob.job_id);
+          if (statusRes) {
+            setProgress(statusRes.progress);
+            setCurrentStep(statusRes.current_step);
+            setJobStatus(statusRes.status);
+
+            if (statusRes.status === "completed" || statusRes.status === "failed") {
               if (pollIntervalRef.current) {
                 clearInterval(pollIntervalRef.current);
                 pollIntervalRef.current = null;
@@ -163,35 +167,11 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
             }
           }
         }, 600);
-      } else {
-        simulateFrontendFlow();
       }
     } catch {
-      simulateFrontendFlow();
+      setJobStatus("failed");
+      setCurrentStep("Không thể kết nối máy chủ.");
     }
-  };
-
-  const simulateFrontendFlow = () => {
-    setJobStatus("queued");
-    setProgress(15);
-    setCurrentStep("Đang xếp hàng trong hàng đợi xuất video...");
-
-    setTimeout(() => {
-      setJobStatus("generating");
-      setProgress(45);
-      setCurrentStep("Đang lấy mẫu khung hình diffusion (bước 9/20)...");
-
-      setTimeout(() => {
-        setProgress(85);
-        setCurrentStep("Đang nội suy chuyển động giữa các khung hình...");
-
-        setTimeout(() => {
-          setJobStatus("completed");
-          setProgress(100);
-          setCurrentStep("Hoàn tất tạo video thành công.");
-        }, 1200);
-      }, 1200);
-    }, 1200);
   };
 
   const handleReset = () => {
@@ -205,28 +185,28 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
     setActiveJobId(null);
   };
 
-  const getStatusLabel = (st: string) => {
-    switch (st) {
-      case "idle":
-        return "Chờ tạo";
-      case "queued":
-        return "Đang chờ";
-      case "generating":
-        return "Đang xử lý";
-      case "completed":
-        return "Hoàn thành";
-      case "failed":
-        return "Thất bại";
-      default:
-        return st;
-    }
-  };
-
   return (
-    <div className="w-full h-full min-h-0 grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-[minmax(0,1fr)] gap-5 animate-in fade-in duration-150">
-      {/* Left Column: Parameter Inspector Panel (5 cols on lg, 4 on xl) */}
-      <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full min-h-0 overflow-y-auto pr-2">
-        <Card className="flex flex-col space-y-4 p-5 pb-6 shrink-0 overflow-visible">
+    <div className="h-full flex flex-col lg:flex-row gap-6 min-h-0">
+      {/* LEFT: Generation Parameters Column */}
+      <div className="w-full lg:w-[460px] flex flex-col shrink-0 overflow-y-auto space-y-4 pr-1">
+        <Card className="p-5 space-y-4">
+          <CardHeader className="p-0 pb-1">
+            <CardTitle className="text-sm">
+              Cấu hình Video
+            </CardTitle>
+          </CardHeader>
+
+          {/* Engine Mode Switcher */}
+          <SegmentedControl<"local" | "cloud">
+            label="Chế độ xử lý"
+            value={engineMode}
+            onChange={setEngineMode}
+            options={[
+              { value: "local", label: "Cục bộ (GPU)", icon: <Cpu className="w-3.5 h-3.5" /> },
+              { value: "cloud", label: "Đám mây (Cloud)", icon: <Cloud className="w-3.5 h-3.5" /> },
+            ]}
+          />
+
           {/* Prompt */}
           <Textarea
             label="Mô tả Video (Prompt)"
@@ -247,18 +227,31 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
             placeholder="mờ, biến dạng, rung giật, chất lượng kém, lỗi hình ảnh..."
           />
 
-          {/* AI Model Engine */}
-          <Select
-            label="Mô hình AI (Checkpoint)"
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-          >
-            {models.map((m) => (
-              <option key={m.id} value={m.name}>
-                {m.name} ({m.type})
-              </option>
-            ))}
-          </Select>
+          {/* AI Model Engine Selector */}
+          {engineMode === "local" ? (
+            <Select
+              label="Mô hình"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+            >
+              {models.map((m) => (
+                <option key={m.id} value={m.name}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <Select
+              label="Dịch vụ"
+              value={selectedCloudProvider}
+              onChange={(e) => setSelectedCloudProvider(e.target.value)}
+            >
+              <option value="kling">Kling AI</option>
+              <option value="runway">Runway Gen-3</option>
+              <option value="luma">Luma Dream Machine</option>
+              <option value="minimax">Hailuo / MiniMax</option>
+            </Select>
+          )}
 
           {/* Aspect Ratio Segmented Control */}
           <SegmentedControl<AspectRatio>
@@ -341,108 +334,130 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
                 variant="secondary"
                 size="md"
                 onClick={handleReset}
-                title="Đặt lại khung xem"
+                title="Đặt lại phiên tạo"
                 className="h-10 w-10 p-0"
-                leftIcon={<RotateCcw className="w-4 h-4" />}
-              />
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
             )}
           </div>
         </Card>
       </div>
 
-      {/* Right Column: Studio Viewport Preview (7 cols on lg, 8 on xl - Full Width) */}
-      <div className="lg:col-span-7 xl:col-span-8 flex flex-col justify-between h-full min-h-0">
-        <Card className="flex-1 flex flex-col justify-between h-full min-h-0">
-          <CardHeader className="py-3 px-5">
-            <div className="flex items-center gap-2.5">
-              <Film className="w-4 h-4 text-indigo-400" />
-              <CardTitle className="text-sm font-semibold">Khung xem trước Studio</CardTitle>
+      {/* RIGHT: Studio Viewport Preview Column */}
+      <div className="flex-1 flex flex-col min-h-0 bg-transparent">
+        <Card className="flex-1 flex flex-col overflow-hidden border border-[var(--border-app)] shadow-xl">
+          {/* Header Bar */}
+          <div className="px-5 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Film className="w-4 h-4 text-indigo-500" />
+              <span className="text-xs font-semibold tracking-wide text-[var(--text-primary)]">
+                Studio Viewport
+              </span>
+              <span className="text-xs font-mono text-[var(--text-muted)]">
+                [{aspectRatio}] • {resolution}
+              </span>
             </div>
-            <Badge
-              variant={
-                jobStatus === "completed"
-                  ? "success"
-                  : jobStatus === "generating" || jobStatus === "queued"
-                  ? "warning"
-                  : jobStatus === "failed"
-                  ? "danger"
-                  : "default"
-              }
-              size="sm"
-              withDot
-            >
-              {getStatusLabel(jobStatus)}
-            </Badge>
-          </CardHeader>
 
-          {/* Viewport Large Canvas */}
-          <div
-            ref={canvasContainerRef}
-            className="flex-1 flex items-center justify-center p-5 bg-black/10 dark:bg-black/50 overflow-hidden relative"
-          >
-            <div
-              style={
-                viewportSize
-                  ? { width: `${viewportSize.width}px`, height: `${viewportSize.height}px` }
-                  : undefined
-              }
-              className={cn(
-                "rounded-xl flex flex-col items-center justify-center p-6 relative border border-zinc-800/80 bg-gradient-to-b from-[#131422] to-[#0a0b12] shadow-2xl",
-                !viewportSize && (
-                  aspectRatio === "16:9"
-                    ? "w-full aspect-video"
-                    : aspectRatio === "9:16"
-                    ? "h-full aspect-[9/16]"
-                    : "h-full aspect-square"
-                )
+            <div className="flex items-center gap-2">
+              {jobStatus === "generating" && (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+                  Đang xử lý: {progress}%
+                </span>
               )}
-            >
-              {jobStatus === "idle" && (
-                <div className="text-center p-6 space-y-2.5 text-zinc-400 select-none">
-                  <div className="w-12 h-12 rounded-full bg-white/[0.04] border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
-                    <Play className="w-6 h-6 ml-0.5" />
-                  </div>
-                  <p className="text-sm font-semibold text-zinc-200">Chưa có Video</p>
-                  <p className="text-xs text-zinc-400 max-w-xs">
-                    Nhập prompt và tinh chỉnh thông số, sau đó nhấn Tạo Video.
-                  </p>
-                </div>
-              )}
-
-              {(jobStatus === "queued" || jobStatus === "generating") && (
-                <div className="w-full max-w-md px-6 text-center space-y-3 z-10">
-                  <div className="w-10 h-10 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin mx-auto shadow-md shadow-indigo-500/20" />
-                  <p className="text-sm text-zinc-100 font-semibold">{currentStep}</p>
-                  <p className="text-xs font-mono text-indigo-300 font-bold">{progress}% Đã xuất</p>
-                  <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden shadow-inner">
-                    <div
-                      className="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
               {jobStatus === "completed" && (
-                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-3 select-none">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-md shadow-emerald-500/20">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <p className="text-base font-bold text-white">Tạo Video Hoàn Tất</p>
-                  <div className="px-3 py-1 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-xs font-mono text-zinc-200">
-                    {resolution} • {duration}s • {aspectRatio}
-                  </div>
-                </div>
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Hoàn tất
+                </span>
+              )}
+              {jobStatus === "idle" && (
+                <span className="text-[11px] font-mono text-[var(--text-muted)]">Sẵn sàng</span>
               )}
             </div>
           </div>
 
-          {/* Viewport Specs Footer */}
+          {/* Interactive Viewport Canvas */}
+          <div
+            ref={canvasContainerRef}
+            className="flex-1 min-h-0 p-4 flex items-center justify-center bg-zinc-950/40 dark:bg-black/60 relative overflow-hidden"
+          >
+            {viewportSize ? (
+              <div
+                style={{
+                  width: `${viewportSize.width}px`,
+                  height: `${viewportSize.height}px`,
+                }}
+                className={cn(
+                  "relative rounded-xl overflow-hidden shadow-2xl transition-[width,height] duration-300 ease-out flex flex-col items-center justify-center select-none border border-[var(--border-app)]",
+                  "bg-gradient-to-b from-zinc-900 to-zinc-950 text-white"
+                )}
+              >
+                {/* IDLE STATE */}
+                {jobStatus === "idle" && (
+                  <div className="flex flex-col items-center gap-3 text-center px-6">
+                    <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-400 shadow-inner">
+                      <Play className="w-5 h-5 ml-0.5 text-zinc-300" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-zinc-200">Khung nhìn xem trước</p>
+                      <p className="text-[11px] text-zinc-400 max-w-xs leading-relaxed">
+                        Nhập câu lệnh prompt và bấm <strong className="text-zinc-200">Tạo Video</strong> để bắt đầu quá trình tổng hợp AI.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* QUEUED OR GENERATING STATE */}
+                {(jobStatus === "queued" || jobStatus === "generating") && (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-8 relative">
+                    <div className="w-full max-w-xs space-y-4 text-center">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono">
+                          <span className="text-indigo-400">Tiến trình xử lý</span>
+                          <span className="font-semibold text-white">{progress}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700/60">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300 ease-out"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-zinc-400 font-mono tracking-tight animate-pulse">
+                        {currentStep || "Đang xử lý khung hình..."}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* COMPLETED STATE */}
+                {jobStatus === "completed" && (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                      <CheckCircle2 className="w-7 h-7" />
+                    </div>
+                    <div className="space-y-1 max-w-sm">
+                      <h4 className="text-sm font-bold text-white">Xuất Video Hoàn tất</h4>
+                      <p className="text-xs text-zinc-400 leading-relaxed font-mono">
+                        Video đã được tạo thành công ({aspectRatio} • {resolution} • {duration}s).
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          {/* Footer Bar */}
           <div className="px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
-            <span className="font-semibold text-[var(--text-primary)]">{aspectRatio}</span>
-            <span>{resolution}</span>
-            <span>{duration}s</span>
-            <span className="text-indigo-600 dark:text-indigo-300 font-semibold">{selectedModel}</span>
+            <div className="flex items-center gap-4">
+              <span>Độ phân giải: <strong className="text-[var(--text-primary)]">{resolution}</strong></span>
+              <span>Thời lượng: <strong className="text-[var(--text-primary)]">{duration}s</strong></span>
+              <span>Chế độ: <strong className="text-[var(--text-primary)]">{engineMode.toUpperCase()}</strong></span>
+            </div>
+            <span>Khung hình: <strong className="text-[var(--text-primary)]">{duration * 16} frames</strong></span>
           </div>
         </Card>
       </div>

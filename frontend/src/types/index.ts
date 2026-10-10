@@ -94,3 +94,14 @@ export interface AppSettings {
   gpu_acceleration: boolean;
   auto_cleanup_cache: boolean;
 }
+
+export interface CloudProvider {
+  provider_id: string;
+  name: string;
+  description: string;
+  is_active: boolean;
+  has_key: boolean;
+  masked_key?: string;
+  credits_remaining?: number;
+  status: "active" | "unconfigured" | "invalid_key" | "error";
+}

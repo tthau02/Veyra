@@ -67,6 +67,14 @@
 - **TypeScript**: Strict mode enabled (`noImplicitAny: true`, unused locals checked). All data shapes must match `src/types/index.ts`.
 - **Python**: Type annotations on all function signatures. All API request/response bodies must use Pydantic v2 schemas in `backend/app/schemas/`.
 
+### ⚠️ Rule 5: UI Consistency & Anti-Clutter (Tuyệt đối không thêm UI lạ)
+- **Không tự ý thêm banner/alert lạ**: Tuyệt đối không tự ý thêm các banner thông tin, banner giới thiệu, hoặc hộp cảnh báo màu sắc (info/alert boxes) làm rối mắt hoặc phá vỡ cấu trúc thiết kế gốc của hệ thống.
+- **Không đưa thuật ngữ nội bộ dev lên UI**: Tuyệt đối không hiển thị các nhãn, badge hoặc thuật ngữ nhà phát triển (như `Phase 2`, `Mock Data`, `Checkpoint`, `Local AI Weights`, đường dẫn thư mục `models/`...) lên giao diện người dùng.
+
+### ⚠️ Rule 6: Concise Studio Copywriting (Text ngắn gọn, đúng chủ đề)
+- **Ngắn gọn & Súc tích**: Toàn bộ câu từ (copywriting), nhãn (label), và nút bấm trên giao diện phải ngắn gọn, súc tích, đi thẳng vào chủ đề. Tuyệt đối không viết văn giải thích dài dòng.
+- **Chuẩn ngôn ngữ Studio sáng tạo**: Sử dụng từ ngữ chuyên nghiệp, dễ hiểu (ví dụ: `Cấu hình Video`, `Mô hình`, `Tải về`, `Đã cài đặt`, `Cục bộ (GPU)`, `Đám mây`).
+
 ---
 
 ## 4. Development & Operation Runbooks

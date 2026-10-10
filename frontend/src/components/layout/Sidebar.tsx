@@ -36,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-60 h-screen bg-[var(--bg-surface)] border-r border-[var(--border-app)] flex flex-col justify-between select-none shrink-0 transition-colors duration-200">
       <div>
         {/* Window Header / App Title */}
-        <div className="h-14 px-4 flex items-center gap-3 border-b border-[var(--border-subtle)]">
+        <div className="h-14 px-4 flex items-center gap-3 border-b border-[var(--border-app)]">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
             <Film className="w-4 h-4" />
           </div>

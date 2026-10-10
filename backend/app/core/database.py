@@ -58,6 +58,57 @@ class DatabaseManager:
                 );
                 """
             )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS cloud_providers (
+                    provider_id TEXT PRIMARY KEY,
+                    provider_name TEXT NOT NULL,
+                    api_key TEXT NOT NULL,
+                    is_active INTEGER DEFAULT 1,
+                    credits_remaining REAL DEFAULT 0,
+                    status TEXT DEFAULT 'active',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS models (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    hf_repo TEXT,
+                    type TEXT NOT NULL,
+                    size_gb REAL NOT NULL,
+                    vram_required_gb REAL DEFAULT 6.0,
+                    status TEXT NOT NULL,
+                    local_path TEXT,
+                    description TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS generation_jobs (
+                    id TEXT PRIMARY KEY,
+                    project_id TEXT,
+                    prompt TEXT NOT NULL,
+                    negative_prompt TEXT,
+                    engine_type TEXT NOT NULL,
+                    provider_or_model TEXT NOT NULL,
+                    aspect_ratio TEXT NOT NULL,
+                    resolution TEXT NOT NULL,
+                    duration_seconds INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    progress INTEGER DEFAULT 0,
+                    current_step TEXT,
+                    output_video_path TEXT,
+                    error_message TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
 
 
 db_manager = DatabaseManager()

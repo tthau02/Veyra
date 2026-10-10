@@ -10,6 +10,7 @@ import {
   Card,
   Badge,
   Button,
+  Modal,
 } from "../components/ui";
 
 interface ModelsPageProps {
@@ -19,15 +20,20 @@ interface ModelsPageProps {
 
 export const ModelsPage: React.FC<ModelsPageProps> = ({ models, onInstallModel }) => {
   const [installingId, setInstallingId] = useState<string | null>(null);
+  const [confirmModel, setConfirmModel] = useState<ModelItem | null>(null);
 
-  const handleInstall = async (id: string) => {
-    setInstallingId(id);
+  const handleConfirmDownload = async () => {
+    if (!confirmModel) return;
+    const modelToInstall = confirmModel;
+    setConfirmModel(null);
+    setInstallingId(modelToInstall.id);
+
     try {
-      await onInstallModel(id);
+      await onInstallModel(modelToInstall.id);
     } finally {
       setTimeout(() => {
         setInstallingId(null);
-      }, 800);
+      }, 1000);
     }
   };
 
@@ -40,12 +46,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({ models, onInstallModel }
       {/* Header Bar */}
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-          Danh sách Checkpoint ({models.filter((m) => m.status === "Installed").length}/{models.length})
+          Kho Mô hình ({models.filter((m) => m.status === "Installed").length}/{models.length})
         </h2>
 
         <div className="flex items-center gap-2 bg-[var(--bg-input)] px-3 py-1.5 rounded-lg border border-[var(--border-app)] text-xs text-[var(--text-secondary)] font-mono shadow-sm">
           <HardDrive className="w-4 h-4 text-indigo-500" />
-          <span>Dung lượng ổ đĩa:</span>
+          <span>Đã cài:</span>
           <span className="font-semibold text-[var(--text-primary)]">{totalSize.toFixed(1)} GB</span>
         </div>
       </div>
@@ -82,7 +88,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({ models, onInstallModel }
                     size="sm"
                     withDot
                   >
-                    {isInstalled ? "Đã cài đặt" : "Có sẵn"}
+                    {isInstalled ? "Đã cài đặt" : "Chưa cài"}
                   </Badge>
                 </div>
 
@@ -93,24 +99,24 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({ models, onInstallModel }
 
               <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs">
                 <span className="text-xs text-[var(--text-secondary)] font-mono">
-                  {model.size_gb > 0 ? `${model.size_gb} GB` : "Mẫu tham chiếu"}
+                  {model.size_gb > 0 ? `${model.size_gb} GB` : "0.0 GB"}
                 </span>
 
                 {isInstalled ? (
                   <div className="inline-flex items-center gap-1.5 text-xs text-emerald-500 dark:text-emerald-400 font-semibold">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Sẵn sàng tạo video</span>
+                    <span>Sẵn sàng</span>
                   </div>
                 ) : (
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => handleInstall(model.id)}
+                    onClick={() => setConfirmModel(model)}
                     disabled={isCurrentInstalling}
                     isLoading={isCurrentInstalling}
                     leftIcon={<Download className="w-3.5 h-3.5" />}
                   >
-                    {isCurrentInstalling ? "Đang tải & cài..." : "Cài đặt Mô hình"}
+                    {isCurrentInstalling ? "Đang tải..." : "Tải về"}
                   </Button>
                 )}
               </div>
@@ -118,6 +124,41 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({ models, onInstallModel }
           );
         })}
       </div>
+
+      {/* Confirmation Modal Before Downloading */}
+      <Modal
+        isOpen={confirmModel !== null}
+        onClose={() => setConfirmModel(null)}
+        title="Tải mô hình AI"
+        maxWidth="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setConfirmModel(null)}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleConfirmDownload}
+              leftIcon={<Download className="w-3.5 h-3.5" />}
+            >
+              Tải về
+            </Button>
+          </>
+        }
+      >
+        {confirmModel && (
+          <div className="space-y-2 text-xs text-[var(--text-secondary)]">
+            <p>
+              Bạn có muốn tải mô hình <strong className="text-[var(--text-primary)]">{confirmModel.name}</strong> ({confirmModel.size_gb} GB) về máy tính không?
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

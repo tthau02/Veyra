@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-14 px-6 bg-[var(--bg-surface)]/95 border-b border-[var(--border-app)] flex items-center justify-between select-none shrink-0 backdrop-blur-md transition-colors duration-200">
+    <header className="h-14 px-6 bg-[var(--bg-surface)] border-b border-[var(--border-app)] flex items-center justify-between select-none shrink-0 z-10 transition-colors duration-200 shadow-sm">
       <div className="flex items-center gap-3">
         <h1 className="text-sm font-bold text-[var(--text-primary)] tracking-wide">
           {titles[currentPage]}

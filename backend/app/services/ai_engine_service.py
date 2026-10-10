@@ -1,5 +1,4 @@
 import asyncio
-import time
 import uuid
 from typing import Optional
 from backend.app.schemas.ai_engine import (
@@ -9,139 +8,60 @@ from backend.app.schemas.ai_engine import (
     ModelInfo,
     ModelListResponse,
 )
+from backend.app.services.model_manager_service import model_manager_service
+from backend.app.services.engines.base import GenerationParams
+from backend.app.services.engines.hub import engine_hub
 
 
 class AIEngineService:
     """
-    AI Engine Service Stub for Phase 1.
-    Provides contract interfaces and mock job orchestrator for UI verification.
+    Central AI Engine Service for Veyra Phase 2.
+    Integrates actual filesystem model management and unified engine hub (Local + Cloud).
     """
 
-    def __init__(self) -> None:
-        self._models: dict[str, ModelInfo] = {
-            "model-example": ModelInfo(
-                id="model-example",
-                name="Example Video Model",
-                type="Văn bản sang Video",
-                size_gb=0.0,
-                status="Not Installed",
-                description="Mẫu thông số tham chiếu nhẹ để kiểm tra kết cấu ứng dụng.",
-            ),
-            "model-veyra-v1": ModelInfo(
-                id="model-veyra-v1",
-                name="Veyra Diffusion v1",
-                type="Văn bản sang Video",
-                size_gb=4.2,
-                status="Installed",
-                description="Quy trình Latent Diffusion mặc định được tối ưu cho phần cứng máy trạm cá nhân.",
-            ),
-            "model-animatediff": ModelInfo(
-                id="model-animatediff",
-                name="AnimateDiff Lightning",
-                type="Hình ảnh/Văn bản sang Video",
-                size_gb=2.8,
-                status="Not Installed",
-                description="Bộ điều hợp chuyển động tốc độ cao tạo mẫu nhanh chuỗi video.",
-            ),
-            "model-cogvideox": ModelInfo(
-                id="model-cogvideox",
-                name="CogVideoX-2B Stub",
-                type="Văn bản sang Video",
-                size_gb=5.1,
-                status="Not Installed",
-                description="Kiến trúc tổng hợp video dựa trên Transformer thế hệ mới.",
-            ),
-        }
-        self._jobs: dict[str, dict] = {}
-
     def generate_video(self, request: VideoGenerationRequest) -> VideoGenerationResponse:
-        """
-        Phase 1 contract endpoint. Returns standard not_implemented response.
-        """
-        job_id = f"job-{uuid.uuid4().hex[:8]}"
+        params = GenerationParams(
+            prompt=request.prompt,
+            negative_prompt=request.negative_prompt,
+            aspect_ratio=request.aspect_ratio,
+            resolution=request.resolution,
+            duration_seconds=request.duration_seconds,
+            seed=request.seed,
+            model_or_provider_id=request.model_name,
+            engine_mode="local",
+        )
+        job_status = engine_hub.start_job(params)
         return VideoGenerationResponse(
-            status="not_implemented",
-            message="AI video generation will be implemented in a later phase.",
-            job_id=job_id,
+            status="started",
+            message="Tác vụ sinh video đã được gửi đến Engine Hub.",
+            job_id=job_status.job_id,
         )
 
     def list_models(self) -> ModelListResponse:
-        return ModelListResponse(models=list(self._models.values()))
+        return model_manager_service.list_models()
 
     def get_model(self, model_id: str) -> Optional[ModelInfo]:
-        return self._models.get(model_id)
+        return model_manager_service.get_model(model_id)
 
-    def install_model(self, model_id: str) -> Optional[ModelInfo]:
-        if model_id in self._models:
-            model = self._models[model_id]
-            self._models[model_id] = ModelInfo(
-                id=model.id,
-                name=model.name,
-                type=model.type,
-                size_gb=model.size_gb,
-                status="Installed",
-                description=model.description,
-            )
-            return self._models[model_id]
-        return None
+    async def install_model(self, model_id: str) -> Optional[ModelInfo]:
+        res = await model_manager_service.start_model_download(model_id)
+        return model_manager_service.get_model(model_id)
 
     def start_mock_job(self, request: VideoGenerationRequest) -> JobStatusResponse:
-        """
-        Allows frontend to test realistic job state machines (Queued -> Generating -> Completed)
-        without invoking heavy deep learning hardware.
-        """
-        job_id = f"mock-job-{uuid.uuid4().hex[:8]}"
-        job_data = {
-            "job_id": job_id,
-            "created_at": time.time(),
-            "prompt": request.prompt,
-            "resolution": request.resolution,
-            "duration": request.duration_seconds,
-        }
-        self._jobs[job_id] = job_data
-        return JobStatusResponse(
-            job_id=job_id,
-            status="queued",
-            progress=0,
-            current_step="Initializing latent canvas and parameters...",
+        params = GenerationParams(
+            prompt=request.prompt,
+            negative_prompt=request.negative_prompt,
+            aspect_ratio=request.aspect_ratio,
+            resolution=request.resolution,
+            duration_seconds=request.duration_seconds,
+            seed=request.seed,
+            model_or_provider_id=request.model_name,
+            engine_mode="local",
         )
+        return engine_hub.start_job(params)
 
     def get_mock_job_status(self, job_id: str) -> JobStatusResponse:
-        job = self._jobs.get(job_id)
-        if not job:
-            return JobStatusResponse(
-                job_id=job_id,
-                status="failed",
-                progress=0,
-                current_step="Job not found",
-                error_message="Unknown job identifier",
-            )
-
-        elapsed = time.time() - job["created_at"]
-        if elapsed < 2.0:
-            return JobStatusResponse(
-                job_id=job_id,
-                status="queued",
-                progress=int(elapsed * 10),
-                current_step="Queued in scheduler pipeline...",
-            )
-        elif elapsed < 7.0:
-            progress = min(95, int(20 + ((elapsed - 2.0) / 5.0) * 75))
-            step = f"Sampling diffusion latent frames (step {int(progress / 5)}/20)..."
-            return JobStatusResponse(
-                job_id=job_id,
-                status="generating",
-                progress=progress,
-                current_step=step,
-            )
-        else:
-            return JobStatusResponse(
-                job_id=job_id,
-                status="completed",
-                progress=100,
-                current_step="Simulation render complete (Placeholder preview ready)",
-                output_url=f"/outputs/{job_id}.mp4",
-            )
+        return engine_hub.get_job_status(job_id)
 
 
 ai_engine_service = AIEngineService()

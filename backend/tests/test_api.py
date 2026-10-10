@@ -30,11 +30,11 @@ async def test_system_info_endpoint():
 
 
 @pytest.mark.anyio
-async def test_ai_engine_generate_stub():
+async def test_ai_engine_generate_dispatch():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         payload = {
             "prompt": "Cyberpunk city with rain",
-            "model_name": "Veyra-Diffusion-v1",
+            "model_name": "model-animatediff",
             "aspect_ratio": "16:9",
             "resolution": "720p",
             "duration_seconds": 5,
@@ -42,8 +42,8 @@ async def test_ai_engine_generate_stub():
         response = await client.post("/api/generate", json=payload)
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "not_implemented"
-        assert "AI video generation will be implemented in a later phase." in data["message"]
+        assert data["status"] == "started"
+        assert data["job_id"] is not None
 
 
 @pytest.mark.anyio
@@ -61,7 +61,7 @@ async def test_projects_crud():
             "name": "Test Animation Project",
             "prompt": "Glowing floating island in the clouds",
             "negative_prompt": "foggy, dark",
-            "model_name": "Veyra-Diffusion-v1",
+            "model_name": "model-animatediff",
             "aspect_ratio": "16:9",
             "resolution": "1080p",
             "duration_seconds": 5,
@@ -86,3 +86,36 @@ async def test_models_endpoint():
         assert response.status_code == 200
         data = response.json()
         assert len(data["models"]) >= 3
+        # Ensure status accurately reports based on filesystem
+        assert all(m["status"] in ["Installed", "Not Installed", "Downloading"] for m in data["models"])
+
+
+@pytest.mark.anyio
+async def test_cloud_providers_crud():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. List providers
+        res = await client.get("/api/providers")
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data["providers"]) >= 4
+
+        # 2. Save API Key
+        save_res = await client.post(
+            "/api/providers/kling",
+            json={"api_key": "kling_test_secret_key_12345", "is_active": True},
+        )
+        assert save_res.status_code == 200
+
+        # 3. Check masked key appears
+        res2 = await client.get("/api/providers")
+        providers = {p["provider_id"]: p for p in res2.json()["providers"]}
+        assert providers["kling"]["has_key"] is True
+        assert "••••" in providers["kling"]["masked_key"]
+
+        # 4. Test provider key
+        test_res = await client.post(
+            "/api/providers/kling/test",
+            json={"api_key": "kling_test_secret_key_12345"},
+        )
+        assert test_res.status_code == 200
+        assert test_res.json()["valid"] is True
