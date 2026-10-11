@@ -59,11 +59,26 @@ and CogVideoX bundles can generate. Model loading uses local files exclusively.
 One GPU job runs at a time; state and output metadata persist in SQLite. The old
 simulation endpoint returns 410. Failed/interrupted jobs never show completed output.
 
-AnimateDiff samples at up to 512 pixels on the long edge (16 frames for 5 seconds,
-32 for 10 seconds). CogVideoX-2B samples 49 frames at 720×480. The export resolution
-controls MP4 resize/crop, not native model resolution. Export uses H.264 at 24 fps,
-repeating sampled frames to match the requested duration. CogVideoX uses sequential
-CPU offload on GPUs below 12 GB and can be considerably slower than AnimateDiff.
+AnimateDiff samples at up to 512 pixels on the long edge, at 8 source fps plus
+one endpoint (41 frames for 5 seconds, 81 for 10). FreeNoise uses overlapping
+16-frame windows and split inference to bound attention memory. Four-step
+Lightning weights and guidance 1 remain unchanged. After releasing GPU weights,
+FFmpeg motion-compensated interpolation produces 24 fps before Lanczos upscale.
+It uses two CPU threads and does not require extra models. Fast motion/occlusion
+can still produce interpolation artifacts; this is not RIFE or AI super-resolution.
+CogVideoX-2B samples 49 frames at 720×480 and retains its previous repeated-frame
+export. Export resolution controls MP4 resize, not native model resolution.
+CogVideoX uses two-block
+group offload on GPUs below 16 GB, without stream prefetch/pinned weight copies.
+The text encoder is released after prompt encoding to reduce RAM usage during
+denoising. Sampling stays at 30 steps and 720×480; it can still be considerably
+slower than four-step AnimateDiff. Actual speed and peak memory require a GPU benchmark.
+
+CogVideoX quality presets use 20 (fast), 30 (balanced, default), or 50 (quality)
+steps, keeping 49 generated frames and native 720×480 resolution. Faster presets
+trade detail for fewer denoising passes; they do not guarantee a fixed speedup.
+CogVideoX exports preserve the entire native frame with padding when the requested
+aspect differs, rather than cropping the subject. Logs record completed job timings.
 
 Run an offline smoke generation through the actual dispatcher:
 

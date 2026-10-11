@@ -12,6 +12,7 @@ class GenerationParams(BaseModel):
     seed: Optional[int] = None
     model_or_provider_id: str = "model-animatediff"
     engine_mode: Literal["local", "cloud"] = "local"
+    quality: Literal["fast", "balanced", "quality"] = "balanced"
 
 
 class VideoGenerationResult(BaseModel):

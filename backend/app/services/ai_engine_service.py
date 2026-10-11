@@ -28,6 +28,7 @@ class AIEngineService:
             seed=request.seed,
             model_or_provider_id=request.model_name,
             engine_mode=request.engine_mode,
+            quality=request.quality,
         )
         job_status = engine_hub.start_job(params)
         return VideoGenerationResponse(

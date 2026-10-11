@@ -49,6 +49,7 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
   const [resolution, setResolution] = useState<Resolution>("720p");
   const [duration, setDuration] = useState<Duration>(5);
   const [seed, setSeed] = useState<number | undefined>(undefined);
+  const [quality, setQuality] = useState<"fast" | "balanced" | "quality">("balanced");
   const [isRandomSeed, setIsRandomSeed] = useState<boolean>(true);
 
   // Job & preview pipeline state
@@ -181,6 +182,7 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
         resolution,
         duration_seconds: duration,
         seed: actualSeed,
+        quality,
         engine_mode: engineMode,
       });
       if (!mountedRef.current || session !== sessionRef.current) return;
@@ -289,6 +291,16 @@ export const CreateVideoPage: React.FC<CreateVideoPageProps> = ({ models }) => {
             )}
 
             {/* Aspect Ratio Segmented Control */}
+            {engineMode === "local" && selectedModel === "model-cogvideox" && <SegmentedControl<"fast" | "balanced" | "quality">
+              label="Chất lượng"
+              value={quality}
+              onChange={setQuality}
+              options={[
+                { value: "fast", label: "Nhanh" },
+                { value: "balanced", label: "Cân bằng" },
+                { value: "quality", label: "Chi tiết" },
+              ]}
+            />}
             <SegmentedControl<AspectRatio>
               label="Tỷ lệ khung hình"
               value={aspectRatio}

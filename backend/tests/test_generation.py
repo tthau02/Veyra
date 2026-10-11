@@ -119,3 +119,54 @@ def test_output_dimensions() -> None:
     assert engine.output_dimensions("16:9", "720p") == (1280, 720)
     assert engine.output_dimensions("9:16", "1080p") == (1080, 1920)
     assert engine.output_dimensions("1:1", "512p") == (512, 512)
+
+
+def test_cog_quality_presets_preserve_frame_count() -> None:
+    for quality, steps in [("fast", 20), ("balanced", 30), ("quality", 50)]:
+        params = GenerationParams(prompt="City", model_or_provider_id="model-cogvideox", quality=quality)
+        assert LocalDiffusersEngine.sampling_settings(params) == (steps, 49)
+    assert LocalDiffusersEngine.sampling_settings(GenerationParams(prompt="City", quality="quality")) == (4, 41)
+    assert LocalDiffusersEngine.sampling_settings(GenerationParams(prompt="City", duration_seconds=10)) == (4, 81)
+
+
+def test_cog_export_preserves_top_and_bottom() -> None:
+    from PIL import Image
+    image = Image.new("RGB", (720, 480), "white")
+    image.paste("red", (0, 0, 720, 30))
+    image.paste("blue", (0, 450, 720, 480))
+    exported = LocalDiffusersEngine.export_frame(image, 1280, 720, True)
+    assert exported.getpixel((640, 10)) == (255, 0, 0)
+    assert exported.getpixel((640, 710)) == (0, 0, 255)
+
+
+def test_cog_groups_do_not_prefetch_or_offload_every_layer(monkeypatch) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    import accelerate
+    offload = Mock()
+    monkeypatch.setattr(accelerate, "cpu_offload", offload)
+    transformer = SimpleNamespace(enable_group_offload=Mock())
+    pipe = SimpleNamespace(transformer=transformer, text_encoder=object(), vae=object())
+    LocalDiffusersEngine._configure_cog_offload(pipe)
+    options = transformer.enable_group_offload.call_args.kwargs
+    assert options["offload_type"] == "block_level"
+    assert options["num_blocks_per_group"] == 2
+    assert options["use_stream"] is False
+    assert offload.call_count == 2
+
+
+def test_cog_releases_text_weights_after_encoding(monkeypatch) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    import accelerate.hooks
+    import torch
+    remove = Mock()
+    monkeypatch.setattr(accelerate.hooks, "remove_hook_from_module", remove)
+    monkeypatch.setattr(torch.cuda, "empty_cache", lambda: None)
+    encoder = object()
+    pipe = SimpleNamespace(text_encoder=encoder, encode_prompt=Mock(return_value=("positive", "negative")))
+    result = LocalDiffusersEngine._cog_prompt(pipe, GenerationParams(prompt="City", negative_prompt="blur"))
+    assert result == {"prompt_embeds": "positive", "negative_prompt_embeds": "negative"}
+    assert pipe.text_encoder is None
+    remove.assert_called_once_with(encoder, recurse=True)
+    assert pipe.encode_prompt.call_args.kwargs["negative_prompt"] == "blur"

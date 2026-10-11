@@ -92,6 +92,7 @@ export interface ModelPreparation {
 }
 
 export interface GenerationRequest {
+  quality?: "fast" | "balanced" | "quality";
   prompt: string;
   negative_prompt?: string;
   model_name: string;

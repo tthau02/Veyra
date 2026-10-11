@@ -15,6 +15,7 @@ class VideoGenerationRequest(BaseModel):
     seed: Optional[int] = Field(default=None, ge=0, le=4294967295)
     simulate_progress: bool = False
     engine_mode: Literal["local", "cloud"] = "local"
+    quality: Literal["fast", "balanced", "quality"] = "balanced"
 
     @field_validator("prompt")
     @classmethod
